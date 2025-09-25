@@ -1,0 +1,50 @@
+
+> cat("\n\n--- Adjusted Rand Index (ARI) Results ---\n")
+
+
+--- Adjusted Rand Index (ARI) Results ---
+
+> for (dataset_name in names(all_results_simple)) {
++   cat("\n-- Dataset:", dataset_name, "--\n")
++   result_list <- all_results_simple[[dataset_name .... [TRUNCATED] 
+
+-- Dataset: Brain --
+# A tibble: 3 × 2
+  Cluster_Method   ARI
+  <chr>          <dbl>
+1 mclust_5       0.310
+2 mclust_7       0.367
+3 mclust_9       0.287
+
+-- Dataset: Breast --
+# A tibble: 3 × 2
+  Cluster_Method   ARI
+  <chr>          <dbl>
+1 mclust_3       0.488
+2 mclust_5       0.355
+3 mclust_7       0.301
+
+-- Dataset: Gut --
+# A tibble: 5 × 2
+  Cluster_Method   ARI
+  <chr>          <dbl>
+1 mclust_3       0.143
+2 mclust_5       0.267
+3 mclust_7       0.247
+4 mclust_9       0.226
+5 mclust_12      0.137
+
+-- Dataset: Prostate --
+# A tibble: 3 × 2
+  Cluster_Method   ARI
+  <chr>          <dbl>
+1 mclust_3       0.636
+2 mclust_5       0.651
+3 mclust_7       0.515
+
+> cat("\n\nScript finished.\n")
+
+
+Script finished.
+
+> sink()  # Reset output to the console

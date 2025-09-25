@@ -1,0 +1,98 @@
+
+> cat("\n--- Adjusted Rand Index (ARI) Results for PC = 3, with_histology ---\n\n")
+
+--- Adjusted Rand Index (ARI) Results for PC = 3, with_histology ---
+
+
+> results_pc3_with
+       dataset PCs clusters       modality        ARI
+1        brain   3        5 with_histology 0.18687607
+2        brain   3        7 with_histology 0.17609111
+3        brain   3        9 with_histology 0.19479387
+4       breast   3        3 with_histology 0.43590265
+5       breast   3        5 with_histology 0.33106843
+6       breast   3        7 with_histology 0.30314838
+7  gut_reduced   3        3 with_histology 0.07686426
+8  gut_reduced   3        5 with_histology 0.13040646
+9  gut_reduced   3        7 with_histology 0.15893261
+10 gut_reduced   3        9 with_histology 0.10094586
+11 gut_reduced   3       12 with_histology 0.10408992
+12    prostate   3        3 with_histology 0.67777857
+13    prostate   3        5 with_histology 0.45713707
+14    prostate   3        7 with_histology 0.39361825
+
+> cat("\n\n--- Adjusted Rand Index (ARI) Results for PC = 3, without_histology ---\n\n")
+
+
+--- Adjusted Rand Index (ARI) Results for PC = 3, without_histology ---
+
+
+> results_pc3_without
+       dataset PCs clusters          modality        ARI
+1        brain   3        5 without_histology 0.15195427
+2        brain   3        7 without_histology 0.21367454
+3        brain   3        9 without_histology 0.15911765
+4       breast   3        3 without_histology 0.50559026
+5       breast   3        5 without_histology 0.44066600
+6       breast   3        7 without_histology 0.32252626
+7 gut_reduced   3        3 without_histology 0.27338975
+8 gut_reduced   3        5 without_histology 0.19900356
+9 gut_reduced   3        7 without_histology 0.18530929
+10 gut_reduced   3        9 without_histology 0.16108909
+11 gut_reduced   3       12 without_histology 0.12075258
+12    prostate   3        3 without_histology 0.71852313
+13    prostate   3        5 without_histology 0.57661260
+14    prostate   3        7 without_histology 0.48056933
+
+> cat("\n\n--- Adjusted Rand Index (ARI) Results for PC = 10, with_histology ---\n\n")
+
+
+--- Adjusted Rand Index (ARI) Results for PC = 10, with_histology ---
+
+
+> results_pc10_with
+       dataset PCs clusters       modality       ARI
+1        brain  10        5 with_histology 0.3619893
+2        brain  10        7 with_histology 0.2349641
+3        brain  10        9 with_histology 0.2348731
+4       breast  10        3 with_histology 0.4275534
+5       breast  10        5 with_histology 0.2653486
+6       breast  10        7 with_histology 0.3090054
+7 gut_reduced  10        3 with_histology 0.2168686
+8 gut_reduced  10        5 with_histology 0.1873614
+9 gut_reduced  10        7 with_histology 0.1536657
+10 gut_reduced  10        9 with_histology 0.1687368
+11 gut_reduced  10       12 with_histology 0.1075066
+12    prostate  10        3 with_histology 0.7478997
+13    prostate  10        5 with_histology 0.5305308
+14    prostate  10        7 with_histology 0.5699516
+
+> cat("\n\n--- Adjusted Rand Index (ARI) Results for PC = 10, without_histology ---\n\n")
+
+
+--- Adjusted Rand Index (ARI) Results for PC = 10, without_histology ---
+
+
+> results_pc10_without
+       dataset PCs clusters          modality       ARI
+1        brain  10        5 without_histology 0.3465161
+2        brain  10        7 without_histology 0.2961059
+3        brain  10        9 without_histology 0.2412266
+4       breast  10        3 without_histology 0.4940240
+5       breast  10        5 without_histology 0.4425769
+6       breast  10        7 without_histology 0.4054255
+7 gut_reduced  10        3 without_histology 0.1693309
+8 gut_reduced  10        5 without_histology 0.1807998
+9 gut_reduced  10        7 without_histology 0.2114781
+10 gut_reduced  10        9 without_histology 0.1445581
+11 gut_reduced  10       12 without_histology 0.1388264
+12    prostate  10        3 without_histology 0.7812389
+13    prostate  10        5 without_histology 0.6357656
+14    prostate  10        7 without_histology 0.5445724
+
+> cat("\nSaved combined ARI results to:\n", output_txt, "\n")
+
+Saved combined ARI results to:
+/DP.RST/Competing_Methods/SpaGCN_ARI_results.txt 
+
+> sink()  # Reset output to console

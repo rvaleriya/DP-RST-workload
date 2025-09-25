@@ -1,0 +1,52 @@
+
+> cat("\n--- Adjusted Rand Index (ARI) Results for PC = 3 ---\n\n")
+
+--- Adjusted Rand Index (ARI) Results for PC = 3 ---
+
+
+> results_df_pc3
+       dataset PCs cluster        ARI
+1        brain   3       5 0.12701882
+2        brain   3       7 0.15235256
+3        brain   3       9 0.11579859
+4       breast   3       3 0.23945170
+5       breast   3       5 0.35627598
+6       breast   3       7 0.35813814
+7 gut_reduced   3       3 0.08446874
+8 gut_reduced   3       5 0.04819760
+9 gut_reduced   3       7 0.07352651
+10 gut_reduced   3       9 0.08631341
+11 gut_reduced   3      12 0.07318286
+12    prostate   3       3 0.63445127
+13    prostate   3       5 0.49939053
+14    prostate   3       7 0.44276504
+
+> cat("\n\n--- Adjusted Rand Index (ARI) Results for PC = 10 ---\n\n")
+
+
+--- Adjusted Rand Index (ARI) Results for PC = 10 ---
+
+
+> results_df_pc10
+       dataset PCs cluster        ARI
+1        brain  10       5 0.16264034
+2        brain  10       7 0.27157837
+3        brain  10       9 0.27909841
+4       breast  10       3 0.15576891
+5       breast  10       5 0.21181196
+6       breast  10       7 0.23554162
+7 gut_reduced  10       3 0.20939250
+8 gut_reduced  10       5 0.11926028
+9 gut_reduced  10       7 0.08757511
+10 gut_reduced  10       9 0.10954970
+11 gut_reduced  10      12 0.08938952
+12    prostate  10       3 0.60610597
+13    prostate  10       5 0.62672670
+14    prostate  10       7 0.34150805
+
+> cat("\nSaved combined ARI results to:\n", output_txt, "\n")
+
+Saved combined ARI results to:
+/DP.RST/Competing_Methods/SEDR_ARI_results.txt 
+
+> sink()  # Reset output to console
