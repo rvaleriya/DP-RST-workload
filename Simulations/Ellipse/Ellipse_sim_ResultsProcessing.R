@@ -18,7 +18,7 @@ set.seed(9362)
 options(error=recover)
 
 ### Load Data ###
-Ellipse_sim_data <- readr::read_csv("./New_Simulations/Ellipse/Ellipse_sim_data.csv")
+Ellipse_sim_data <- readr::read_csv("./Simulations/Ellipse/Ellipse_sim_data.csv")
 
 #-------------------------------------------------------------------------------
 
@@ -179,13 +179,13 @@ true_clusters_with_label <- ggdraw() +
   draw_label("(A)", x = 0, y = 0.98, size = 20, hjust = 0, vjust = 1)
 true_clusters_with_label
 
-ggsave("./New_Simulations/Ellipse/Ellipse_results/Ellipse_sim_true_clusters_MainPaper.png", 
+ggsave("./Simulations/Ellipse/Ellipse_plots/Ellipse_sim_true_clusters_MainPaper.png", 
        plot = true_clusters_with_label, 
        width = 5, height = 5, units = "in", dpi = 300, bg = "transparent")
 
 #-------------------------------------------------------------------------------
 ##### DP-RST results for p=3 #####
-load("./New_Simulations/Ellipse/Ellipse_results/Ellipse_sim_DP.RST_p3_30reps.RData")
+load("./Simulations/Ellipse/Ellipse_results/Ellipse_sim_DP.RST_p3_30reps.RData")
 output_p3 = Ellipse_sim_DP.RST_p3_reps
 
 ### Calculate the accuracy for each run ###
@@ -256,7 +256,7 @@ DPM_results_p3 <- plot_points_paper(
   palette = my_palette_ellipse,
   title = title_expr
 ) +
-  scale_y_reverse() +
+  # scale_y_reverse() +
   theme(plot.title = element_text(size = 20, lineheight = 1.2))
 
 DPM_results_p3
@@ -264,7 +264,7 @@ DPM_results_p3
 
 #-------------------------------------------------------------------------------
 ##### DP-RST results for p=10 #####
-load("./New_Simulations/Ellipse/Ellipse_results/Ellipse_sim_DP.RST_p10_30reps.RData")
+load("./Simulations/Ellipse/Ellipse_results/Ellipse_sim_DP.RST_p10_30reps.RData")
 output_p10 = Ellipse_sim_DP.RST_p10_reps
 
 ### Calculate the accuracy for each run ###
@@ -332,41 +332,62 @@ DPM_results_p10 <- plot_points_paper(
   palette = my_palette_ellipse,
   title = title_expr
 ) +
-  scale_y_reverse() +
+  # scale_y_reverse() +
   theme(plot.title = element_text(size = 20, lineheight = 1.2))
 
 DPM_results_p10
 
 
 #-------------------------------------------------------------------------------
+# Title row with label and method name
+title_row_DPM <- plot_grid(
+  ggdraw() + draw_label("(i)", fontface = "bold", size = 20, hjust = 0, vjust = 1),
+  ggdraw() + draw_label("DP-RST", fontface = "bold", size = 24, hjust = 0.5, vjust = 1),
+  ncol = 2,
+  rel_widths = c(0.1, 0.9)
+)
 
-combined_plot <- DPM_results_p3 + DPM_results_p10 +
-  plot_annotation(title = bquote(bold("DP-RST"))) &
-  theme(
-    plot.title = element_text(size = 24, hjust = 0.5)  # Center title
-  )
+# Combined plots vertically
+combined_body_DPM <- DPM_results_p3 / DPM_results_p10 +
+  plot_layout(heights = c(1, 1)) &
+  theme(plot.margin = margin(t = 10, r = 5, b = 5, l = 5))
 
-combined_plot
+# Final layout
+final_plot_DPM <- plot_grid(
+  title_row_DPM,
+  combined_body_DPM,
+  ncol = 1,
+  rel_heights = c(0.1, 1.9)
+)
+final_plot_DPM
 
-DPM_results_with_label <- ggdraw() +
-  draw_plot(combined_plot) +
-  draw_label("(i)", x = 0, y = 0.99, size = 20, hjust = 0, vjust = 1)
-DPM_results_with_label
+# combined_plot <- DPM_results_p3 + DPM_results_p10 +
+#   plot_annotation(title = bquote(bold("DP-RST"))) &
+#   theme(
+#     plot.title = element_text(size = 24, hjust = 0.5)  # Center title
+#   )
+# 
+# combined_plot
+# 
+# DPM_results_with_label <- ggdraw() +
+#   draw_plot(combined_plot) +
+#   draw_label("(i)", x = 0, y = 0.99, size = 20, hjust = 0, vjust = 1)
+# DPM_results_with_label
 
-DPM_results_with_label_MainPaper <- ggdraw() +
-  draw_plot(combined_plot) +
-  draw_label("(B)", x = 0, y = 0.99, size = 20, hjust = 0, vjust = 1)
-DPM_results_with_label_MainPaper
+# DPM_results_with_label_MainPaper <- ggdraw() +
+#   draw_plot(combined_plot) +
+#   draw_label("(B)", x = 0, y = 0.99, size = 20, hjust = 0, vjust = 1)
+# DPM_results_with_label_MainPaper
 
 
-ggsave("./New_Simulations/Ellipse/Ellipse_results/Ellipse_sim_DPM.png", 
-       plot = DPM_results_with_label, 
-       width = 11, height = 6, units = "in", dpi = 300, bg = "transparent")
+ggsave("./Simulations/Ellipse/Ellipse_plots/Ellipse_sim_DPM.png", 
+       plot = final_plot_DPM, 
+       width = 5, height = 10, units = "in", dpi = 300, bg = "transparent")
 
 
-ggsave("./New_Simulations/Ellipse/Ellipse_results/Ellipse_sim_DPM_MainPaper.png", 
-       plot = DPM_results_with_label_MainPaper, 
-       width = 11, height = 6, units = "in", dpi = 300, bg = "transparent")
+# ggsave("./Simulations/Ellipse/Ellipse_plots/Ellipse_sim_DPM_MainPaper.png", 
+#        plot = DPM_results_with_label_MainPaper, 
+#        width = 11, height = 6, units = "in", dpi = 300, bg = "transparent")
 
 
 #-------------------------------------------------------------------------------
@@ -414,7 +435,7 @@ Ellipse_hist_plot_p10
 combined_plot_hist <- Ellipse_hist_plot_p3 + Ellipse_hist_plot_p10
 combined_plot_hist
 
-ggsave("./New_Simulations/Ellipse/Ellipse_hist_combined_plot.png", combined_plot_hist, width = 10, height = 4)
+ggsave("./Simulations/Ellipse/Ellipse_plots/Ellipse_hist_combined_plot.png", combined_plot_hist, width = 10, height = 4)
 
 #-------------------------------------------------------------------------------
 ##### DENSITY PLOTS OF EACH PC PER CLUSTER #####
@@ -470,14 +491,14 @@ density_with_label
 
 
 # Save the combined plot
-ggsave("./New_Simulations/Ellipse/Ellipse_results/Ellips_DensityFeatures.png", 
+ggsave("./Simulations/Ellipse/Ellipse_plots/Ellips_DensityFeatures.png", 
        plot = density_with_label, 
        width = 17, height = 7, units = "in", dpi = 300, bg = "transparent")
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 ##### BayesSpace results #####
-load("./New_Simulations/Ellipse/Ellipse_results/Ellipse_sim_BayesSpace_p3_30reps.RData")
+load("./Simulations/Ellipse/Ellipse_results/Ellipse_sim_BayesSpace_p3_30reps.RData")
 
 BayesSpace_acc_p3 <- c()
 for (i in 1:30){
@@ -506,7 +527,7 @@ BayesSpace_results_p3 <- plot_points_paper(
 BayesSpace_results_p3
 
 #-------------------------------------------------------------------------------
-load("./New_Simulations/Ellipse/Ellipse_results/Ellipse_sim_BayesSpace_p10_30reps.RData")
+load("./Simulations/Ellipse/Ellipse_results/Ellipse_sim_BayesSpace_p10_30reps.RData")
 
 BayesSpace_acc_p10 <- c()
 for (i in 1:30){
@@ -559,7 +580,7 @@ final_plot_BayesSpace
 
 # Save
 ggsave(
-  "./New_Simulations/Ellipse/Ellipse_results/Ellipse_sim_BayesSpace.png", 
+  "./Simulations/Ellipse/Ellipse_plots/Ellipse_sim_BayesSpace.png", 
   plot = final_plot_BayesSpace, 
   width = 5, height = 10, units = "in", dpi = 300, bg = "transparent"
 )
@@ -567,7 +588,7 @@ ggsave(
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 ##### SC-MEB results #####
-load("./New_Simulations/Ellipse/Ellipse_results/Ellipse_sim_SC.MEB_p3_30reps.RData")
+load("./Simulations/Ellipse/Ellipse_results/Ellipse_sim_SC.MEB_p3_30reps.RData")
 
 SC.MEB_acc_p3 <- c()
 for (i in 1:30){
@@ -595,7 +616,7 @@ SC.MEB_results_p3 <- plot_points_paper(
 SC.MEB_results_p3
 
 #-------------------------------------------------------------------------------
-load("./New_Simulations/Ellipse/Ellipse_results/Ellipse_sim_SC.MEB_p10_30reps.RData")
+load("./Simulations/Ellipse/Ellipse_results/Ellipse_sim_SC.MEB_p10_30reps.RData")
 
 SC.MEB_acc_p10 <- c()
 for (i in 1:30){
@@ -648,14 +669,14 @@ final_plot_SC.MEB
 
 # Save
 ggsave(
-  "./New_Simulations/Ellipse/Ellipse_results/Ellipse_sim_SC.MEB.png", 
+  "./Simulations/Ellipse/Ellipse_plots/Ellipse_sim_SC.MEB.png", 
   plot = final_plot_SC.MEB, 
   width = 5, height = 10, units = "in", dpi = 300, bg = "transparent"
 )
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 ##### DR-RC results #####
-load("./New_Simulations/Ellipse/Ellipse_results/Ellipse_sim_DR.SC_p3_30reps.RData")
+load("./Simulations/Ellipse/Ellipse_results/Ellipse_sim_DR.SC_p3_30reps.RData")
 
 DR.SC_acc_p3 <- c()
 for (i in 1:30){
@@ -683,7 +704,7 @@ DR.SC_results_p3 <- plot_points_paper(
 DR.SC_results_p3
 
 #-------------------------------------------------------------------------------
-load("./New_Simulations/Ellipse/Ellipse_results/Ellipse_sim_DR.SC_p10_30reps.RData")
+load("./Simulations/Ellipse/Ellipse_results/Ellipse_sim_DR.SC_p10_30reps.RData")
 
 DR.SC_acc_p10 <- c()
 for (i in 1:30){
@@ -736,14 +757,14 @@ final_plot_DR.SC
 
 # Save
 ggsave(
-  "./New_Simulations/Ellipse/Ellipse_results/Ellipse_sim_DR.SC.png", 
+  "./Simulations/Ellipse/Ellipse_plots/Ellipse_sim_DR.SC.png", 
   plot = final_plot_DR.SC, 
   width = 5, height = 10, units = "in", dpi = 300, bg = "transparent"
 )
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 ##### k-means results #####
-load("./New_Simulations/Ellipse/Ellipse_results/Ellipse_sim_kmeans_3p_30reps.RData")
+load("./Simulations/Ellipse/Ellipse_results/Ellipse_sim_kmeans_3p_30reps.RData")
 
 kmeans_acc_p3 <- c()
 for (i in 1:30){
@@ -771,7 +792,7 @@ kmeans_results_p3 <- plot_points_paper(
 kmeans_results_p3
 
 #-------------------------------------------------------------------------------
-load("./New_Simulations/Ellipse/Ellipse_results/Ellipse_sim_kmeans_10p_30reps.RData")
+load("./Simulations/Ellipse/Ellipse_results/Ellipse_sim_kmeans_10p_30reps.RData")
 
 kmeans_acc_p10 <- c()
 for (i in 1:30){
@@ -824,8 +845,427 @@ final_plot_kmeans
 
 # Save the plot
 ggsave(
-  "./New_Simulations/Ellipse/Ellipse_results/Ellipse_sim_kmeans.png",
+  "./Simulations/Ellipse/Ellipse_plots/Ellipse_sim_kmeans.png",
   plot = final_plot_kmeans,
+  width = 5, height = 10, units = "in", dpi = 300, bg = "transparent"
+)
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+##### Load GraphST data #####
+GraphST_sim_results_p3 <- readr::read_csv("./Simulations/Ellipse/Ellipse_results/graphst_ellipse_3p_multiseed_k5_radius50_results.csv")
+
+# Extract ARIs from all GraphST columns
+graphst_partition_matrix_p3 <- GraphST_sim_results_p3 %>%
+  select(starts_with("refined_mclust_seed_")) %>%
+  as.matrix()
+
+graphst_ari_p3 <- apply(
+  graphst_partition_matrix_p3, 
+  2, 
+  function(col) adjustedRandIndex(GraphST_sim_results_p3$original_cluster, col)
+)
+
+graphst_best_index_p3 <- which.max(graphst_ari_p3)
+graphst_best_ari_p3 <- graphst_ari_p3[graphst_best_index_p3]
+graphst_se_p3 <- sd(graphst_ari_p3) / sqrt(length(graphst_ari_p3))
+
+# Best partition
+graphst_best_partition_p3 <- reorder_based_on_reference(
+  graphst_partition_matrix_p3[, graphst_best_index_p3],
+  reference_vector
+)
+
+graphst_results_p3 <- plot_points_paper(
+  coords = as.matrix(Ellipse_sim_data[, c("x", "y")]),
+  values = graphst_best_partition_p3,
+  boundary_df = boundary_df,
+  palette = my_palette_ellipse,
+  title = bquote(bold("p = 3, ") ~ italic("ARI = ") ~ .(round(graphst_best_ari_p3, 3)) ~ " (" ~ .(round(graphst_se_p3, 3)) ~ ")")
+) +
+  # scale_y_reverse() +
+  theme(plot.title = element_text(size = 20))
+
+graphst_results_p3
+#-------------------------------------------------------------------------------
+
+GraphST_sim_results_p10 <- readr::read_csv("./Simulations/Ellipse/Ellipse_results/graphst_ellipse_10p_multiseed_k5_radius50_results.csv")
+
+# Extract ARIs from all GraphST columns
+graphst_partition_matrix_p10 <- GraphST_sim_results_p10 %>%
+  select(starts_with("refined_mclust_seed_")) %>%
+  as.matrix()
+
+graphst_ari_p10 <- apply(
+  graphst_partition_matrix_p10, 
+  2, 
+  function(col) adjustedRandIndex(GraphST_sim_results_p10$original_cluster, col)
+)
+
+graphst_best_index_p10 <- which.max(graphst_ari_p10)
+graphst_best_ari_p10 <- graphst_ari_p10[graphst_best_index_p10]
+graphst_se_p10 <- sd(graphst_ari_p10) / sqrt(length(graphst_ari_p10))
+
+# Best partition
+graphst_best_partition_p10 <- reorder_based_on_reference(
+  graphst_partition_matrix_p10[, graphst_best_index_p10],
+  reference_vector
+)
+
+graphst_results_p10 <- plot_points_paper(
+  coords = as.matrix(Ellipse_sim_data[, c("x", "y")]),
+  values = graphst_best_partition_p10,
+  boundary_df = boundary_df,
+  palette = my_palette_ellipse,
+  title = bquote(bold("p = 10, ") ~ italic("ARI = ") ~ .(round(graphst_best_ari_p10, 3)) ~ " (" ~ .(round(graphst_se_p10, 3)) ~ ")")
+) +
+  # scale_y_reverse() +
+  theme(plot.title = element_text(size = 20))
+
+graphst_results_p10
+
+#-------------------------------------------------------------------------------
+
+# Title row with label and method name
+title_row_graphst <- plot_grid(
+  ggdraw() + draw_label("(vi)", fontface = "bold", size = 20, hjust = 0, vjust = 1),
+  ggdraw() + draw_label("GraphST", fontface = "bold", size = 24, hjust = 0.5, vjust = 1),
+  ncol = 2,
+  rel_widths = c(0.1, 0.9)
+)
+
+# Combine plots vertically
+combined_body_graphst <- graphst_results_p3 / graphst_results_p10 +
+  plot_layout(heights = c(1, 1)) &
+  theme(plot.margin = margin(t = 10, r = 5, b = 5, l = 5))
+
+# Final stacked layout
+final_plot_graphst <- plot_grid(
+  title_row_graphst,
+  combined_body_graphst,
+  ncol = 1,
+  rel_heights = c(0.1, 1.9)
+)
+final_plot_graphst
+
+# Save the plot
+ggsave(
+  "./Simulations/Ellipse/Ellipse_plots/Ellipse_sim_GraphST.png",
+  plot = final_plot_graphst,
+  width = 5, height = 10, units = "in", dpi = 300, bg = "transparent"
+)
+
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+##### Load SEDR data #####
+SEDR_sim_results_p3 <- readr::read_csv("./Simulations/Ellipse/Ellipse_results/sedr_ellipse_3p_multiseed_k5_results.csv")
+
+# Extract ARIs from all SEDR columns
+sedr_partition_matrix_p3 <- SEDR_sim_results_p3 %>%
+  select(starts_with("mclust_seed_")) %>%
+  as.matrix()
+
+sedr_ari_p3 <- apply(
+  sedr_partition_matrix_p3, 
+  2, 
+  function(col) adjustedRandIndex(SEDR_sim_results_p3$original_cluster, col)
+)
+
+sedr_best_index_p3 <- which.max(sedr_ari_p3)
+sedr_best_ari_p3 <- sedr_ari_p3[sedr_best_index_p3]
+sedr_se_p3 <- sd(sedr_ari_p3) / sqrt(length(sedr_ari_p3))
+
+# Best partition
+sedr_best_partition_p3 <- reorder_based_on_reference(
+  sedr_partition_matrix_p3[, sedr_best_index_p3],
+  reference_vector
+)
+
+sedr_results_p3 <- plot_points_paper(
+  coords = as.matrix(Ellipse_sim_data[, c("x", "y")]),
+  values = sedr_best_partition_p3,
+  boundary_df = boundary_df,
+  palette = my_palette_ellipse,
+  title = bquote(bold("p = 3, ") ~ italic("ARI = ") ~ .(round(sedr_best_ari_p3, 3)) ~ " (" ~ .(round(sedr_se_p3, 3)) ~ ")")
+) +
+  # scale_y_reverse() +
+  theme(plot.title = element_text(size = 20))
+
+sedr_results_p3
+#-------------------------------------------------------------------------------
+
+SEDR_sim_results_p10 <- readr::read_csv("./Simulations/Ellipse/Ellipse_results/sedr_ellipse_10p_multiseed_k5_results.csv")
+
+# Extract ARIs from all SEDR columns
+sedr_partition_matrix_p10 <- SEDR_sim_results_p10 %>%
+  select(starts_with("mclust_seed_")) %>%
+  as.matrix()
+
+sedr_ari_p10 <- apply(
+  sedr_partition_matrix_p10, 
+  2, 
+  function(col) adjustedRandIndex(SEDR_sim_results_p10$original_cluster, col)
+)
+
+sedr_best_index_p10 <- which.max(sedr_ari_p10)
+sedr_best_ari_p10 <- sedr_ari_p10[sedr_best_index_p10]
+sedr_se_p10 <- sd(sedr_ari_p10) / sqrt(length(sedr_ari_p10))
+
+# Best partition
+sedr_best_partition_p10 <- reorder_based_on_reference(
+  sedr_partition_matrix_p10[, sedr_best_index_p10],
+  reference_vector
+)
+
+sedr_results_p10 <- plot_points_paper(
+  coords = as.matrix(Ellipse_sim_data[, c("x", "y")]),
+  values = sedr_best_partition_p10,
+  boundary_df = boundary_df,
+  palette = my_palette_ellipse,
+  title = bquote(bold("p = 10, ") ~ italic("ARI = ") ~ .(round(sedr_best_ari_p10, 3)) ~ " (" ~ .(round(sedr_se_p10, 3)) ~ ")")
+) +
+  # scale_y_reverse() +
+  theme(plot.title = element_text(size = 20))
+
+sedr_results_p10
+
+#-------------------------------------------------------------------------------
+
+# Title row with label and method name
+title_row_sedr <- plot_grid(
+  ggdraw() + draw_label("(vii)", fontface = "bold", size = 20, hjust = 0, vjust = 1),
+  ggdraw() + draw_label("SEDR", fontface = "bold", size = 24, hjust = 0.5, vjust = 1),
+  ncol = 2,
+  rel_widths = c(0.1, 0.9)
+)
+
+# Combine plots vertically
+combined_body_sedr <- sedr_results_p3 / sedr_results_p10 +
+  plot_layout(heights = c(1, 1)) &
+  theme(plot.margin = margin(t = 10, r = 5, b = 5, l = 5))
+
+# Final stacked layout
+final_plot_sedr <- plot_grid(
+  title_row_sedr,
+  combined_body_sedr,
+  ncol = 1,
+  rel_heights = c(0.1, 1.9)
+)
+final_plot_sedr
+
+# Save the plot
+ggsave(
+  "./Simulations/Ellipse/Ellipse_plots/Ellipse_sim_SEDR.png",
+  plot = final_plot_sedr,
+  width = 5, height = 10, units = "in", dpi = 300, bg = "transparent"
+)
+
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+##### Load STAGATE data #####
+STAGATE_sim_results_p3 <- readr::read_csv("./Simulations/Ellipse/Ellipse_results/stagate_simdata_multiseed_5clusters_3p_results.csv")
+
+# Extract ARIs from all STAGATE columns
+stagate_partition_matrix_p3 <- STAGATE_sim_results_p3 %>%
+  select(starts_with("stagate_seed_")) %>%
+  as.matrix()
+
+stagate_ari_p3 <- apply(
+  stagate_partition_matrix_p3, 
+  2, 
+  function(col) adjustedRandIndex(STAGATE_sim_results_p3$cluster, col)
+)
+
+stagate_best_index_p3 <- which.max(stagate_ari_p3)
+stagate_best_ari_p3 <- stagate_ari_p3[stagate_best_index_p3]
+stagate_se_p3 <- sd(stagate_ari_p3) / sqrt(length(stagate_ari_p3))
+
+# Best partition
+stagate_best_partition_p3 <- reorder_based_on_reference(
+  stagate_partition_matrix_p3[, stagate_best_index_p3],
+  reference_vector
+)
+
+stagate_results_p3 <- plot_points_paper(
+  coords = as.matrix(Ellipse_sim_data[, c("x", "y")]),
+  values = stagate_best_partition_p3,
+  boundary_df = boundary_df,
+  palette = my_palette_ellipse,
+  title = bquote(bold("p = 3, ") ~ italic("ARI = ") ~ .(round(stagate_best_ari_p3, 3)) ~ " (" ~ .(round(stagate_se_p3, 3)) ~ ")")
+) +
+  # scale_y_reverse() +
+  theme(plot.title = element_text(size = 20))
+
+stagate_results_p3
+#-------------------------------------------------------------------------------
+
+STAGATE_sim_results_p10 <- readr::read_csv("./Simulations/Ellipse/Ellipse_results/stagate_simdata_multiseed_5clusters_10p_results.csv")
+
+# Extract ARIs from all STAGATE columns
+stagate_partition_matrix_p10 <- STAGATE_sim_results_p10 %>%
+  select(starts_with("stagate_seed_")) %>%
+  as.matrix()
+
+stagate_ari_p10 <- apply(
+  stagate_partition_matrix_p10, 
+  2, 
+  function(col) adjustedRandIndex(STAGATE_sim_results_p10$cluster, col)
+)
+
+stagate_best_index_p10 <- which.max(stagate_ari_p10)
+stagate_best_ari_p10 <- stagate_ari_p10[stagate_best_index_p10]
+stagate_se_p10 <- sd(stagate_ari_p10) / sqrt(length(stagate_ari_p10))
+
+# Best partition
+stagate_best_partition_p10 <- reorder_based_on_reference(
+  stagate_partition_matrix_p10[, stagate_best_index_p10],
+  reference_vector
+)
+
+stagate_results_p10 <- plot_points_paper(
+  coords = as.matrix(Ellipse_sim_data[, c("x", "y")]),
+  values = stagate_best_partition_p10,
+  boundary_df = boundary_df,
+  palette = my_palette_ellipse,
+  title = bquote(bold("p = 10, ") ~ italic("ARI = ") ~ .(round(stagate_best_ari_p10, 3)) ~ " (" ~ .(round(stagate_se_p10, 3)) ~ ")")
+) +
+  # scale_y_reverse() +
+  theme(plot.title = element_text(size = 20))
+
+stagate_results_p10
+
+#-------------------------------------------------------------------------------
+
+# Title row with label and method name
+title_row_stagate <- plot_grid(
+  ggdraw() + draw_label("(viii)", fontface = "bold", size = 20, hjust = 0, vjust = 1),
+  ggdraw() + draw_label("STAGATE", fontface = "bold", size = 24, hjust = 0.5, vjust = 1),
+  ncol = 2,
+  rel_widths = c(0.1, 0.9)
+)
+
+# Combine plots vertically
+combined_body_stagate <- stagate_results_p3 / stagate_results_p10 +
+  plot_layout(heights = c(1, 1)) &
+  theme(plot.margin = margin(t = 10, r = 5, b = 5, l = 5))
+
+# Final stacked layout
+final_plot_stagate <- plot_grid(
+  title_row_stagate,
+  combined_body_stagate,
+  ncol = 1,
+  rel_heights = c(0.1, 1.9)
+)
+final_plot_stagate
+
+# Save the plot
+ggsave(
+  "./Simulations/Ellipse/Ellipse_plots/Ellipse_sim_STAGATE.png",
+  plot = final_plot_stagate,
+  width = 5, height = 10, units = "in", dpi = 300, bg = "transparent"
+)
+
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+##### Load SpaGCN data #####
+SpaGCN_sim_results_p3 <- readr::read_csv("./Simulations/Ellipse/Ellipse_results/ellipse_spagcn_clustering_results_3p_multi_seed.csv")
+
+# Extract ARIs from all SpaGCN columns
+spagcn_partition_matrix_p3 <- SpaGCN_sim_results_p3 %>%
+  select(starts_with("refined_pred_seed_")) %>%
+  as.matrix()
+
+spagcn_ari_p3 <- apply(
+  spagcn_partition_matrix_p3, 
+  2, 
+  function(col) adjustedRandIndex(SpaGCN_sim_results_p3$ground_truth_cluster, col)
+)
+
+spagcn_best_index_p3 <- which.max(spagcn_ari_p3)
+spagcn_best_ari_p3 <- spagcn_ari_p3[spagcn_best_index_p3]
+spagcn_se_p3 <- sd(spagcn_ari_p3) / sqrt(length(spagcn_ari_p3))
+
+# Best partition
+spagcn_best_partition_p3 <- reorder_based_on_reference(
+  spagcn_partition_matrix_p3[, spagcn_best_index_p3]+1,
+  reference_vector
+)
+
+spagcn_results_p3 <- plot_points_paper(
+  coords = as.matrix(Ellipse_sim_data[, c("x", "y")]),
+  values = spagcn_best_partition_p3,
+  boundary_df = boundary_df,
+  palette = my_palette_ellipse,
+  title = bquote(bold("p = 3, ") ~ italic("ARI = ") ~ .(round(spagcn_best_ari_p3, 3)) ~ " (" ~ .(round(spagcn_se_p3, 3)) ~ ")")
+) +
+  # scale_y_reverse() +
+  theme(plot.title = element_text(size = 20))
+
+spagcn_results_p3
+
+#-------------------------------------------------------------------------------
+SpaGCN_sim_results_p10 <- readr::read_csv("./Simulations/Ellipse/Ellipse_results/ellipse_spagcn_clustering_results_10p_multi_seed.csv")
+
+# Extract ARIs from all SpaGCN columns
+spagcn_partition_matrix_p10 <- SpaGCN_sim_results_p10 %>%
+  select(starts_with("refined_pred_seed_")) %>%
+  as.matrix()
+
+spagcn_ari_p10 <- apply(
+  spagcn_partition_matrix_p10, 
+  2, 
+  function(col) adjustedRandIndex(SpaGCN_sim_results_p10$ground_truth_cluster, col)
+)
+
+spagcn_best_index_p10 <- which.max(spagcn_ari_p10)
+spagcn_best_ari_p10 <- spagcn_ari_p10[spagcn_best_index_p10]
+spagcn_se_p10 <- sd(spagcn_ari_p10) / sqrt(length(spagcn_ari_p10))
+
+# Best partition
+spagcn_best_partition_p10 <- reorder_based_on_reference(
+  spagcn_partition_matrix_p10[, spagcn_best_index_p10]+1,
+  reference_vector
+)
+
+spagcn_results_p10 <- plot_points_paper(
+  coords = as.matrix(Ellipse_sim_data[, c("x", "y")]),
+  values = spagcn_best_partition_p10,
+  boundary_df = boundary_df,
+  palette = my_palette_ellipse,
+  title = bquote(bold("p = 10, ") ~ italic("ARI = ") ~ .(round(spagcn_best_ari_p10, 3)) ~ " (" ~ .(round(spagcn_se_p10, 3)) ~ ")")
+) +
+  # scale_y_reverse() +
+  theme(plot.title = element_text(size = 20))
+
+spagcn_results_p10
+
+#-------------------------------------------------------------------------------
+
+# Title row with label and method name
+title_row_spagcn <- plot_grid(
+  ggdraw() + draw_label("(ix)", fontface = "bold", size = 20, hjust = 0, vjust = 1),
+  ggdraw() + draw_label("SpaGCN", fontface = "bold", size = 24, hjust = 0.5, vjust = 1),
+  ncol = 2,
+  rel_widths = c(0.1, 0.9)
+)
+
+# Combine plots vertically
+combined_body_spagcn <- spagcn_results_p3 / spagcn_results_p10 +
+  plot_layout(heights = c(1, 1)) &
+  theme(plot.margin = margin(t = 10, r = 5, b = 5, l = 5))
+
+# Final stacked layout
+final_plot_spagcn <- plot_grid(
+  title_row_spagcn,
+  combined_body_spagcn,
+  ncol = 1,
+  rel_heights = c(0.1, 1.9)
+)
+final_plot_spagcn
+
+# Save the plot
+ggsave(
+  "./Simulations/Ellipse/Ellipse_plots/Ellipse_sim_SpaGCN.png",
+  plot = final_plot_spagcn,
   width = 5, height = 10, units = "in", dpi = 300, bg = "transparent"
 )
 #-------------------------------------------------------------------------------
@@ -838,10 +1278,16 @@ data <- data.frame(
                BayesSpace_acc_p3, BayesSpace_acc_p10,
                DR.SC_acc_p3, DR.SC_acc_p10,
                SC.MEB_acc_p3, SC.MEB_acc_p10,
-               kmeans_acc_p3, kmeans_acc_p10),
-  Method = factor(rep(c("DP-RST", "Bayes\nSpace", "DR.SC", "SC.MEB", "k-means"), each = 60),
-                  levels = c("DP-RST", "Bayes\nSpace", "DR.SC", "SC.MEB", "k-means")),
-  P = factor(rep(rep(c("p = 3", "p = 10"), each = 30), times = 5),
+               kmeans_acc_p3, kmeans_acc_p10,
+               graphst_ari_p3, graphst_ari_p10,
+               sedr_ari_p3, sedr_ari_p10,
+               stagate_ari_p3, stagate_ari_p10,
+               spagcn_ari_p3, spagcn_ari_p10),
+  Method = factor(rep(c("DP-RST", "Bayes\nSpace", "DR.SC", "SC.MEB", "k-means", 
+                        "GraphST", "SEDR", "STAGATE", "SpaGCN"), each = 60),
+                  levels = c("DP-RST", "Bayes\nSpace", "DR.SC", "SC.MEB", "k-means",
+                             "GraphST", "SEDR", "STAGATE", "SpaGCN")),
+  P = factor(rep(rep(c("p = 3", "p = 10"), each = 30), times = 9),
              levels = c("p = 3", "p = 10"))
 )
 
@@ -849,13 +1295,17 @@ data <- data.frame(
 # Create the box plot
 boxplot <- ggplot(data, aes(x = Method, y = Accuracy, fill = Method)) +
   geom_boxplot(position = position_dodge(width = 0.8), aes(group = interaction(Method, P))) +
-  facet_wrap(~P, ncol = 2) +  # Optional: if you want facets. If you prefer grouped bars, remove.
+  facet_wrap(~P, ncol = 1) +  # Optional: if you want facets. If you prefer grouped bars, remove.
   scale_fill_manual(values = c(
     "DP-RST" = "#B28DFF",
     "Bayes\nSpace" = "#FFE066",
     "DR.SC" = "#903030FF",
     "SC.MEB" = "#FFFFFFFF",
-    "k-means" = "#7BDFF2"
+    "k-means" = "#7BDFF2",
+    "GraphST"     = "#FF99AC",  # Soft coral pink
+    "SEDR"        = "#9BDEAC",  # Mint green
+    "STAGATE"     = "#FFB347",  # Warm orange
+    "SpaGCN"      = "#7D7ABC"   # Muted periwinkle
   )) +
   theme_minimal() +
   labs(x = NULL,
@@ -875,9 +1325,9 @@ boxplot
 boxplot_with_label <- ggdraw() +
   draw_label("Compare ARI", x = 0.5, y = 0.98, size = 20, fontface = "bold", hjust = 0.5, vjust = 1) +
   draw_plot(boxplot) +
-  draw_label("(C)", x = 0.1, y = 0.98, size = 20, hjust = 0, vjust = 1)
+  draw_label("(B)", x = 0.1, y = 0.98, size = 20, hjust = 0, vjust = 1)
 boxplot_with_label
 
-ggsave("./New_Simulations/Ellipse/Ellipse_results/Ellipse_sim_boxplot.png", 
+ggsave("./Simulations/Ellipse/Ellipse_plots/Ellipse_sim_boxplot.png", 
        plot = boxplot_with_label, 
-       width = 12, height = 5, units = "in", dpi = 300, bg = "transparent")
+       width = 12, height = 8, units = "in", dpi = 300, bg = "transparent")
