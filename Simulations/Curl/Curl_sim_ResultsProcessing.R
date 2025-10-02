@@ -18,11 +18,11 @@ set.seed(9362)
 options(error=recover)
 
 ### Load Data ###
-Curl_sim_data <- readr::read_csv("./New_Simulations/Curl/Curl_sim_data.csv")
+Curl_sim_data <- readr::read_csv("./Simulations/Curl/Curl_sim_data.csv")
 
 ### Load Boundary ###
 # Unzip the folder
-zip_file <- "./New_Simulations/Curl/Curl_contours_csv.zip"
+zip_file <- "./Simulations/Curl/Curl_contours_csv.zip"
 unzip(zip_file, exdir = "contours_csv")
 
 # List all CSV files
@@ -166,17 +166,17 @@ true_clusters_with_label <- ggdraw() +
   draw_label("(A)", x = 0, y = 0.98, size = 20, hjust = 0, vjust = 1)
 true_clusters_with_label
 
-ggsave("./New_Simulations/Curl/Curl_results/Curl_sim_true_clusters.png", 
+ggsave("./Simulations/Curl/Curl_plots/Curl_sim_true_clusters.png", 
        plot = true_clusters_with_label, 
        width = 5, height = 5, units = "in", dpi = 300, bg = "transparent")
 #-------------------------------------------------------------------------------
 ##### DP-RST results for p=3 #####
 
-load("./New_Simulations/Curl/Curl_results/split_DP-RST/Curl_sim_DP.RST_p3_FirstTen_reps.RData")
+load("./Simulations/Curl/Curl_results/split_DP-RST/Curl_sim_DP.RST_p3_FirstTen_reps.RData")
 Curl_sim_DP.RST_p3_FirstTen_reps <- Curl_sim_DP.RST_p3_reps
-load("./New_Simulations/Curl/Curl_results/split_DP-RST/Curl_sim_DP.RST_p3_SecondTen_reps.RData")
+load("./Simulations/Curl/Curl_results/split_DP-RST/Curl_sim_DP.RST_p3_SecondTen_reps.RData")
 Curl_sim_DP.RST_p3_SecondTen_reps <- Curl_sim_DP.RST_p3_reps[11:20]
-load("./New_Simulations/Curl/Curl_results/split_DP-RST/Curl_sim_DP.RST_p3_ThirdTen_reps.RData")
+load("./Simulations/Curl/Curl_results/split_DP-RST/Curl_sim_DP.RST_p3_ThirdTen_reps.RData")
 Curl_sim_DP.RST_p3_ThirdTen_reps <- Curl_sim_DP.RST_p3_reps[21:30]
 
 # Combine all into one list
@@ -262,11 +262,11 @@ DPM_results_p3
 #-------------------------------------------------------------------------------
 ##### DP-RST results for p=10 #####
 
-load("./New_Simulations/Curl/Curl_results/split_DP-RST/Curl_sim_DP.RST_p10_FirstTen_30reps.RData")
+load("./Simulations/Curl/Curl_results/split_DP-RST/Curl_sim_DP.RST_p10_FirstTen_30reps.RData")
 Curl_sim_DP.RST_p10_FirstTen_reps <- Curl_sim_DP.RST_p10_reps
-load("./New_Simulations/Curl/Curl_results/split_DP-RST/Curl_sim_DP.RST_p10_SecondTen_30reps.RData")
+load("./Simulations/Curl/Curl_results/split_DP-RST/Curl_sim_DP.RST_p10_SecondTen_30reps.RData")
 Curl_sim_DP.RST_p10_SecondTen_reps <- Curl_sim_DP.RST_p10_reps[11:20]
-load("./New_Simulations/Curl/Curl_results/split_DP-RST/Curl_sim_DP.RST_p10_ThirdTen_30reps.RData")
+load("./Simulations/Curl/Curl_results/split_DP-RST/Curl_sim_DP.RST_p10_ThirdTen_30reps.RData")
 Curl_sim_DP.RST_p10_ThirdTen_reps <- Curl_sim_DP.RST_p10_reps[21:30]
 
 # Combine all into one list
@@ -368,13 +368,13 @@ DPM_results_with_label_MainPaper <- ggdraw() +
   draw_label("(B)", x = 0, y = 0.99, size = 20, hjust = 0, vjust = 1)
 DPM_results_with_label_MainPaper
 
-ggsave("./New_Simulations/Curl/Curl_results/Curl_sim_DPM_new.png", 
+ggsave("./Simulations/Curl/Curl_plots/Curl_sim_DPM.png", 
        plot = DPM_results_with_label, 
        width = 10, height = 5.5, units = "in", dpi = 300, bg = "transparent")
 
-ggsave("./New_Simulations/Curl/Curl_results/Curl_sim_DPM_new_MainPaper.png", 
-       plot = DPM_results_with_label_MainPaper, 
-       width = 10, height = 5.5, units = "in", dpi = 300, bg = "transparent")
+# ggsave("./Simulations/Curl/Curl_plots/Curl_sim_DPM_new_MainPaper.png", 
+#        plot = DPM_results_with_label_MainPaper, 
+#        width = 10, height = 5.5, units = "in", dpi = 300, bg = "transparent")
 
 #-------------------------------------------------------------------------------
 
@@ -421,12 +421,12 @@ Curl_hist_plot_p10
 combined_plot_hist <- Curl_hist_plot_p3 + Curl_hist_plot_p10
 combined_plot_hist
 
-ggsave("./New_Simulations/Curl/Curl_results/Curl_hist_combined_plot.png", combined_plot_hist, width = 10, height = 4)
+ggsave("./Simulations/Curl/Curl_plots/Curl_hist_combined_plot.png", combined_plot_hist, width = 10, height = 4)
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 ##### BayesSpace results #####
-load("./New_Simulations/Curl/Curl_results/Curl_sim_BayesSpace_p3_30reps.RData")
+load("./Simulations/Curl/Curl_results/Curl_sim_BayesSpace_p3_30reps.RData")
 
 BayesSpace_acc_p3 <- c()
 for (i in 1:30){
@@ -455,7 +455,7 @@ BayesSpace_results_p3 <- plot_points_paper(
 BayesSpace_results_p3
 
 #-------------------------------------------------------------------------------
-load("./New_Simulations/Curl/Curl_results/Curl_sim_BayesSpace_p10_30reps.RData")
+load("./Simulations/Curl/Curl_results/Curl_sim_BayesSpace_p10_30reps.RData")
 
 BayesSpace_acc_p10 <- c()
 for (i in 1:30){
@@ -498,14 +498,14 @@ BayesSpace_results_with_label <- ggdraw() +
 BayesSpace_results_with_label
 
 
-ggsave("./New_Simulations/Curl/Curl_results/Curl_sim_BayesSpace.png", 
+ggsave("./Simulations/Curl/Curl_plots/Curl_sim_BayesSpace.png", 
        plot = BayesSpace_results_with_label, 
        width = 10, height = 5, units = "in", dpi = 300, bg = "transparent")
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 ##### SC-MEB results #####
-load("./New_Simulations/Curl/Curl_results/Curl_sim_SC.MEB_p3_30reps.RData")
+load("./Simulations/Curl/Curl_results/Curl_sim_SC.MEB_p3_30reps.RData")
 
 SC.MEB_acc_p3 <- c()
 for (i in 1:30){
@@ -533,7 +533,7 @@ SC.MEB_results_p3 <- plot_points_paper(
 SC.MEB_results_p3
 
 #-------------------------------------------------------------------------------
-load("./New_Simulations/Curl/Curl_results/Curl_sim_SC.MEB_p10_30reps.RData")
+load("./Simulations/Curl/Curl_results/Curl_sim_SC.MEB_p10_30reps.RData")
 
 SC.MEB_acc_p10 <- c()
 for (i in 1:30){
@@ -576,14 +576,14 @@ SC.MEB_results_with_label <- ggdraw() +
 SC.MEB_results_with_label
 
 
-ggsave("./New_Simulations/Curl/Curl_results/Curl_sim_SC.MEB.png", 
+ggsave("./Simulations/Curl/Curl_plots/Curl_sim_SC.MEB.png", 
        plot = SC.MEB_results_with_label, 
        width = 10, height = 5, units = "in", dpi = 300, bg = "transparent")
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 ##### DR-RC results #####
-load("./New_Simulations/Curl/Curl_results/Curl_sim_DR.SC_p3_30reps.RData")
+load("./Simulations/Curl/Curl_results/Curl_sim_DR.SC_p3_30reps.RData")
 
 DR.SC_acc_p3 <- c()
 for (i in 1:30){
@@ -611,7 +611,7 @@ DR.SC_results_p3 <- plot_points_paper(
 DR.SC_results_p3
 
 #-------------------------------------------------------------------------------
-load("./New_Simulations/Curl/Curl_results/Curl_sim_DR.SC_p10_30reps.RData")
+load("./Simulations/Curl/Curl_results/Curl_sim_DR.SC_p10_30reps.RData")
 
 DR.SC_acc_p10 <- c()
 for (i in 1:30){
@@ -654,14 +654,14 @@ DR.SC_results_with_label <- ggdraw() +
 DR.SC_results_with_label
 
 
-ggsave("./New_Simulations/Curl/Curl_results/Curl_sim_DR.SC.png", 
+ggsave("./Simulations/Curl/Curl_plots/Curl_sim_DR.SC.png", 
        plot = DR.SC_results_with_label, 
        width = 10, height = 5, units = "in", dpi = 300, bg = "transparent")
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 ##### k-means results #####
-load("./New_Simulations/Curl/Curl_results/Curl_sim_kmeans_3p_30reps.RData")
+load("./Simulations/Curl/Curl_results/Curl_sim_kmeans_3p_30reps.RData")
 
 kmeans_acc_p3 <- c()
 for (i in 1:30){
@@ -689,7 +689,7 @@ kmeans_results_p3 <- plot_points_paper(
 kmeans_results_p3
 
 #-------------------------------------------------------------------------------
-load("./New_Simulations/Curl/Curl_results/Curl_sim_kmeans_10p_30reps.RData")
+load("./Simulations/Curl/Curl_results/Curl_sim_kmeans_10p_30reps.RData")
 
 kmeans_acc_p10 <- c()
 for (i in 1:30){
@@ -732,8 +732,386 @@ kmeans_results_with_label <- ggdraw() +
 kmeans_results_with_label
 
 
-ggsave("./New_Simulations/Curl/Curl_results/Curl_sim_kmeans.png", 
+ggsave("./Simulations/Curl/Curl_plots/Curl_sim_kmeans.png", 
        plot = kmeans_results_with_label, 
+       width = 10, height = 5, units = "in", dpi = 300, bg = "transparent")
+
+
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+##### Load GraphST data #####
+GraphST_sim_results_p3 <- readr::read_csv("./Simulations/Curl/Curl_results/graphst_curl_3p_multiseed_k10_radius50_results.csv")
+
+# Extract ARIs from all GraphST columns
+graphst_partition_matrix_p3 <- GraphST_sim_results_p3 %>%
+  select(starts_with("refined_mclust_seed_")) %>%
+  as.matrix()
+
+graphst_ari_p3 <- apply(
+  graphst_partition_matrix_p3, 
+  2, 
+  function(col) adjustedRandIndex(GraphST_sim_results_p3$original_cluster, col)
+)
+
+graphst_best_index_p3 <- which.max(graphst_ari_p3)
+graphst_best_ari_p3 <- graphst_ari_p3[graphst_best_index_p3]
+graphst_se_p3 <- sd(graphst_ari_p3) / sqrt(length(graphst_ari_p3))
+
+# Best partition
+graphst_best_partition_p3 <- reorder_based_on_reference(
+  graphst_partition_matrix_p3[, graphst_best_index_p3],
+  reference_vector
+)
+
+graphst_results_p3 <- plot_points_paper(
+  coords = as.matrix(Curl_sim_data[, c("X", "Y")]),
+  values = graphst_best_partition_p3,
+  boundary_df = all_contours,
+  palette = my_palette_curl,
+  title = bquote(bold("p = 3, ") ~ italic("ARI = ") ~ .(round(graphst_best_ari_p3, 3)) ~ " (" ~ .(round(graphst_se_p3, 3)) ~ ")")
+) +
+  scale_y_reverse() +
+  theme(plot.title = element_text(size = 20))
+
+graphst_results_p3
+#-------------------------------------------------------------------------------
+
+GraphST_sim_results_p10 <- readr::read_csv("./Simulations/Curl/Curl_results/graphst_curl_10p_multiseed_k10_radius50_results.csv")
+
+# Extract ARIs from all GraphST columns
+graphst_partition_matrix_p10 <- GraphST_sim_results_p10 %>%
+  select(starts_with("refined_mclust_seed_")) %>%
+  as.matrix()
+
+graphst_ari_p10 <- apply(
+  graphst_partition_matrix_p10, 
+  2, 
+  function(col) adjustedRandIndex(GraphST_sim_results_p10$original_cluster, col)
+)
+
+graphst_best_index_p10 <- which.max(graphst_ari_p10)
+graphst_best_ari_p10 <- graphst_ari_p10[graphst_best_index_p10]
+graphst_se_p10 <- sd(graphst_ari_p10) / sqrt(length(graphst_ari_p10))
+
+# Best partition
+graphst_best_partition_p10 <- reorder_based_on_reference(
+  graphst_partition_matrix_p10[, graphst_best_index_p10],
+  reference_vector
+)
+
+graphst_results_p10 <- plot_points_paper(
+  coords = as.matrix(Curl_sim_data[, c("X", "Y")]),
+  values = graphst_best_partition_p10,
+  boundary_df = all_contours,
+  palette = my_palette_curl,
+  title = bquote(bold("p = 10, ") ~ italic("ARI = ") ~ .(round(graphst_best_ari_p10, 3)) ~ " (" ~ .(round(graphst_se_p10, 3)) ~ ")")
+) +
+  scale_y_reverse() +
+  theme(plot.title = element_text(size = 20))
+
+graphst_results_p10
+
+#-------------------------------------------------------------------------------
+
+combined_plot_graphst <- graphst_results_p3 + graphst_results_p10 +
+  plot_annotation(title = bquote(bold("GraphST"))) &
+  theme(
+    plot.title = element_text(size = 24, hjust = 0.5)  # Center title
+  )
+
+combined_plot_graphst
+
+graphst_results_with_label <- ggdraw() +
+  draw_plot(combined_plot_graphst) +
+  draw_label("(vi)", x = 0, y = 0.99, size = 20, hjust = 0, vjust = 1)
+graphst_results_with_label
+
+
+ggsave("./Simulations/Curl/Curl_plots/Curl_sim_GraphST.png", 
+       plot = graphst_results_with_label, 
+       width = 10, height = 5, units = "in", dpi = 300, bg = "transparent")
+
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+##### Load SEDR data #####
+SEDR_sim_results_p3 <- readr::read_csv("./Simulations/Curl/Curl_results/sedr_curl_3p_multiseed_k10_results_BestResult.csv")
+
+# Extract ARIs from all SEDR columns
+sedr_partition_matrix_p3 <- SEDR_sim_results_p3 %>%
+  select(starts_with("mclust_seed_")) %>%
+  as.matrix()
+
+sedr_ari_p3 <- apply(
+  sedr_partition_matrix_p3, 
+  2, 
+  function(col) adjustedRandIndex(SEDR_sim_results_p3$original_cluster, col)
+)
+
+sedr_best_index_p3 <- which.max(sedr_ari_p3)
+sedr_best_ari_p3 <- sedr_ari_p3[sedr_best_index_p3]
+sedr_se_p3 <- sd(sedr_ari_p3) / sqrt(length(sedr_ari_p3))
+
+# Best partition
+sedr_best_partition_p3 <- reorder_based_on_reference(
+  sedr_partition_matrix_p3[, sedr_best_index_p3],
+  reference_vector
+)
+
+sedr_results_p3 <- plot_points_paper(
+  coords = as.matrix(Curl_sim_data[, c("X", "Y")]),
+  values = sedr_best_partition_p3,
+  boundary_df = all_contours,
+  palette = my_palette_curl,
+  title = bquote(bold("p = 3, ") ~ italic("ARI = ") ~ .(round(sedr_best_ari_p3, 3)) ~ " (" ~ .(round(sedr_se_p3, 3)) ~ ")")
+) +
+  scale_y_reverse() +
+  theme(plot.title = element_text(size = 20))
+
+sedr_results_p3
+#-------------------------------------------------------------------------------
+
+SEDR_sim_results_p10 <- readr::read_csv("./Simulations/Curl/Curl_results/sedr_curl_10p_multiseed_k10_results_BestResult.csv")
+
+# Extract ARIs from all SEDR columns
+sedr_partition_matrix_p10 <- SEDR_sim_results_p10 %>%
+  select(starts_with("mclust_seed_")) %>%
+  as.matrix()
+
+sedr_ari_p10 <- apply(
+  sedr_partition_matrix_p10, 
+  2, 
+  function(col) adjustedRandIndex(SEDR_sim_results_p10$original_cluster, col)
+)
+
+sedr_best_index_p10 <- which.max(sedr_ari_p10)
+sedr_best_ari_p10 <- sedr_ari_p10[sedr_best_index_p10]
+sedr_se_p10 <- sd(sedr_ari_p10) / sqrt(length(sedr_ari_p10))
+
+# Best partition
+sedr_best_partition_p10 <- reorder_based_on_reference(
+  sedr_partition_matrix_p10[, sedr_best_index_p10],
+  reference_vector
+)
+
+sedr_results_p10 <- plot_points_paper(
+  coords = as.matrix(Curl_sim_data[, c("X", "Y")]),
+  values = sedr_best_partition_p10,
+  boundary_df = all_contours,
+  palette = my_palette_curl,
+  title = bquote(bold("p = 10, ") ~ italic("ARI = ") ~ .(round(sedr_best_ari_p10, 3)) ~ " (" ~ .(round(sedr_se_p10, 3)) ~ ")")
+) +
+  scale_y_reverse() +
+  theme(plot.title = element_text(size = 20))
+
+sedr_results_p10
+
+#-------------------------------------------------------------------------------
+
+combined_plot_sedr <- sedr_results_p3 + sedr_results_p10 +
+  plot_annotation(title = bquote(bold("SEDR"))) &
+  theme(
+    plot.title = element_text(size = 24, hjust = 0.5)  # Center title
+  )
+
+combined_plot_sedr
+
+sedr_results_with_label <- ggdraw() +
+  draw_plot(combined_plot_sedr) +
+  draw_label("(vii)", x = 0, y = 0.99, size = 20, hjust = 0, vjust = 1)
+sedr_results_with_label
+
+
+ggsave("./Simulations/Curl/Curl_plots/Curl_sim_SEDR.png", 
+       plot = sedr_results_with_label, 
+       width = 10, height = 5, units = "in", dpi = 300, bg = "transparent")
+
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+##### Load STAGATE data #####
+STAGATE_sim_results_p3 <- readr::read_csv("./Simulations/Curl/Curl_results/stagate_simdata_multiseed_10clusters_3p_results.csv")
+
+# Extract ARIs from all STAGATE columns
+stagate_partition_matrix_p3 <- STAGATE_sim_results_p3 %>%
+  select(starts_with("stagate_seed_")) %>%
+  as.matrix()
+
+stagate_ari_p3 <- apply(
+  stagate_partition_matrix_p3, 
+  2, 
+  function(col) adjustedRandIndex(STAGATE_sim_results_p3$cluster, col)
+)
+
+stagate_best_index_p3 <- which.max(stagate_ari_p3)
+stagate_best_ari_p3 <- stagate_ari_p3[stagate_best_index_p3]
+stagate_se_p3 <- sd(stagate_ari_p3) / sqrt(length(stagate_ari_p3))
+
+# Best partition
+stagate_best_partition_p3 <- reorder_based_on_reference(
+  stagate_partition_matrix_p3[, stagate_best_index_p3],
+  reference_vector
+)
+
+stagate_results_p3 <- plot_points_paper(
+  coords = as.matrix(Curl_sim_data[, c("X", "Y")]),
+  values = stagate_best_partition_p3,
+  boundary_df = all_contours,
+  palette = my_palette_curl,
+  title = bquote(bold("p = 3, ") ~ italic("ARI = ") ~ .(round(stagate_best_ari_p3, 3)) ~ " (" ~ .(round(stagate_se_p3, 3)) ~ ")")
+) +
+  scale_y_reverse() +
+  theme(plot.title = element_text(size = 20))
+
+stagate_results_p3
+#-------------------------------------------------------------------------------
+
+STAGATE_sim_results_p10 <- readr::read_csv("./Simulations/Curl/Curl_results/stagate_simdata_multiseed_10clusters_10p_results.csv")
+
+# Extract ARIs from all STAGATE columns
+stagate_partition_matrix_p10 <- STAGATE_sim_results_p10 %>%
+  select(starts_with("stagate_seed_")) %>%
+  as.matrix()
+
+stagate_ari_p10 <- apply(
+  stagate_partition_matrix_p10, 
+  2, 
+  function(col) adjustedRandIndex(STAGATE_sim_results_p10$cluster, col)
+)
+
+stagate_best_index_p10 <- which.max(stagate_ari_p10)
+stagate_best_ari_p10 <- stagate_ari_p10[stagate_best_index_p10]
+stagate_se_p10 <- sd(stagate_ari_p10) / sqrt(length(stagate_ari_p10))
+
+# Best partition
+stagate_best_partition_p10 <- reorder_based_on_reference(
+  stagate_partition_matrix_p10[, stagate_best_index_p10],
+  reference_vector
+)
+
+stagate_results_p10 <- plot_points_paper(
+  coords = as.matrix(Curl_sim_data[, c("X", "Y")]),
+  values = stagate_best_partition_p10,
+  boundary_df = all_contours,
+  palette = my_palette_curl,
+  title = bquote(bold("p = 10, ") ~ italic("ARI = ") ~ .(round(stagate_best_ari_p10, 3)) ~ " (" ~ .(round(stagate_se_p10, 3)) ~ ")")
+) +
+  scale_y_reverse() +
+  theme(plot.title = element_text(size = 20))
+
+stagate_results_p10
+
+#-------------------------------------------------------------------------------
+
+combined_plot_stagate <- stagate_results_p3 + stagate_results_p10 +
+  plot_annotation(title = bquote(bold("STAGATE"))) &
+  theme(
+    plot.title = element_text(size = 24, hjust = 0.5)  # Center title
+  )
+
+combined_plot_stagate
+
+stagate_results_with_label <- ggdraw() +
+  draw_plot(combined_plot_stagate) +
+  draw_label("(viii)", x = 0, y = 0.99, size = 20, hjust = 0, vjust = 1)
+stagate_results_with_label
+
+
+ggsave("./Simulations/Curl/Curl_plots/Curl_sim_STAGATE.png", 
+       plot = stagate_results_with_label, 
+       width = 10, height = 5, units = "in", dpi = 300, bg = "transparent")
+
+
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+##### Load SpaGCN data #####
+SpaGCN_sim_results_p3 <- readr::read_csv("./Simulations/Curl/Curl_results/curl_spagcn_clustering_results_3p_multi_seed.csv")
+
+# Extract ARIs from all SpaGCN columns
+spagcn_partition_matrix_p3 <- SpaGCN_sim_results_p3 %>%
+  select(starts_with("refined_pred_seed_")) %>%
+  as.matrix()
+
+spagcn_ari_p3 <- apply(
+  spagcn_partition_matrix_p3, 
+  2, 
+  function(col) adjustedRandIndex(SpaGCN_sim_results_p3$ground_truth_cluster, col)
+)
+
+spagcn_best_index_p3 <- which.max(spagcn_ari_p3)
+spagcn_best_ari_p3 <- spagcn_ari_p3[spagcn_best_index_p3]
+spagcn_se_p3 <- sd(spagcn_ari_p3) / sqrt(length(spagcn_ari_p3))
+
+# Best partition
+spagcn_best_partition_p3 <- reorder_based_on_reference(
+  spagcn_partition_matrix_p3[, spagcn_best_index_p3]+1,
+  reference_vector
+)
+
+spagcn_results_p3 <- plot_points_paper(
+  coords = as.matrix(Curl_sim_data[, c("X", "Y")]),
+  values = spagcn_best_partition_p3,
+  boundary_df = all_contours,
+  palette = my_palette_curl,
+  title = bquote(bold("p = 3, ") ~ italic("ARI = ") ~ .(round(spagcn_best_ari_p3, 3)) ~ " (" ~ .(round(spagcn_se_p3, 3)) ~ ")")
+) +
+  scale_y_reverse() +
+  theme(plot.title = element_text(size = 20))
+
+spagcn_results_p3
+
+#-------------------------------------------------------------------------------
+SpaGCN_sim_results_p10 <- readr::read_csv("./Simulations/Curl/Curl_results/curl_spagcn_clustering_results_10p_multi_seed.csv")
+
+# Extract ARIs from all SpaGCN columns
+spagcn_partition_matrix_p10 <- SpaGCN_sim_results_p10 %>%
+  select(starts_with("refined_pred_seed_")) %>%
+  as.matrix()
+
+spagcn_ari_p10 <- apply(
+  spagcn_partition_matrix_p10, 
+  2, 
+  function(col) adjustedRandIndex(SpaGCN_sim_results_p10$ground_truth_cluster, col)
+)
+
+spagcn_best_index_p10 <- which.max(spagcn_ari_p10)
+spagcn_best_ari_p10 <- spagcn_ari_p10[spagcn_best_index_p10]
+spagcn_se_p10 <- sd(spagcn_ari_p10) / sqrt(length(spagcn_ari_p10))
+
+# Best partition
+spagcn_best_partition_p10 <- reorder_based_on_reference(
+  spagcn_partition_matrix_p10[, spagcn_best_index_p10]+1,
+  reference_vector
+)
+
+spagcn_results_p10 <- plot_points_paper(
+  coords = as.matrix(Curl_sim_data[, c("X", "Y")]),
+  values = spagcn_best_partition_p10,
+  boundary_df = all_contours,
+  palette = my_palette_curl,
+  title = bquote(bold("p = 10, ") ~ italic("ARI = ") ~ .(round(spagcn_best_ari_p10, 3)) ~ " (" ~ .(round(spagcn_se_p10, 3)) ~ ")")
+) +
+  scale_y_reverse() +
+  theme(plot.title = element_text(size = 20))
+
+spagcn_results_p10
+
+#-------------------------------------------------------------------------------
+
+combined_plot_spagcn <- spagcn_results_p3 + spagcn_results_p10 +
+  plot_annotation(title = bquote(bold("SpaGCN"))) &
+  theme(
+    plot.title = element_text(size = 24, hjust = 0.5)  # Center title
+  )
+
+combined_plot_spagcn
+
+spagcn_results_with_label <- ggdraw() +
+  draw_plot(combined_plot_spagcn) +
+  draw_label("(ix)", x = 0, y = 0.99, size = 20, hjust = 0, vjust = 1)
+spagcn_results_with_label
+
+
+ggsave("./Simulations/Curl/Curl_plots/Curl_sim_SpaGCN.png", 
+       plot = spagcn_results_with_label, 
        width = 10, height = 5, units = "in", dpi = 300, bg = "transparent")
 
 #-------------------------------------------------------------------------------
@@ -746,23 +1124,33 @@ data <- data.frame(
                BayesSpace_acc_p3, BayesSpace_acc_p10,
                DR.SC_acc_p3, DR.SC_acc_p10,
                SC.MEB_acc_p3, SC.MEB_acc_p10,
-               kmeans_acc_p3, kmeans_acc_p10),
-  Method = factor(rep(c("DP-RST", "Bayes\nSpace", "DR.SC", "SC.MEB", "k-means"), each = 60),
-                  levels = c("DP-RST", "Bayes\nSpace", "DR.SC", "SC.MEB", "k-means")),
-  P = factor(rep(rep(c("p = 3", "p = 10"), each = 30), times = 5),
+               kmeans_acc_p3, kmeans_acc_p10,
+               graphst_ari_p3, graphst_ari_p10,
+               sedr_ari_p3, sedr_ari_p10,
+               stagate_ari_p3, stagate_ari_p10,
+               spagcn_ari_p3, spagcn_ari_p10),
+  Method = factor(rep(c("DP-RST", "Bayes\nSpace", "DR.SC", "SC.MEB", "k-means", 
+                        "GraphST", "SEDR", "STAGATE", "SpaGCN"), each = 60),
+                  levels = c("DP-RST", "Bayes\nSpace", "DR.SC", "SC.MEB", "k-means",
+                             "GraphST", "SEDR", "STAGATE", "SpaGCN")),
+  P = factor(rep(rep(c("p = 3", "p = 10"), each = 30), times = 9),
              levels = c("p = 3", "p = 10"))
 )
 
 # Create the box plot
 boxplot <- ggplot(data, aes(x = Method, y = Accuracy, fill = Method)) +
   geom_boxplot(position = position_dodge(width = 0.8), aes(group = interaction(Method, P))) +
-  facet_wrap(~P, ncol = 2) +  # Optional: if you want facets. If you prefer grouped bars, remove.
+  facet_wrap(~P, ncol = 1) +  # Optional: if you want facets. If you prefer grouped bars, remove.
   scale_fill_manual(values = c(
     "DP-RST" = "#C5E384",
     "Bayes\nSpace" = "#E6A8D7",
     "DR.SC" = "#89CFF0",
     "SC.MEB" = "#FFB347",
-    "k-means" = "#FFDAC1"
+    "k-means" = "#FFDAC1",
+    "GraphST"     = "#A3A0FB",  # periwinkle purple
+    "SEDR"        = "#77DD77",  # pastel green
+    "STAGATE"     = "#FF6961",  # soft coral red
+    "SpaGCN"      = "#779ECB"   # muted denim blue
   )) +
   theme_minimal() +
   labs(x = NULL,
@@ -782,10 +1170,10 @@ boxplot
 boxplot_with_label <- ggdraw() +
   draw_label("Compare ARI", x = 0.5, y = 0.98, size = 20, fontface = "bold", hjust = 0.5, vjust = 1) +
   draw_plot(boxplot) +
-  draw_label("(C)", x = 0.1, y = 0.98, size = 20, hjust = 0, vjust = 1)
+  draw_label("(B)", x = 0.1, y = 0.98, size = 20, hjust = 0, vjust = 1)
 boxplot_with_label
 
-ggsave("./New_Simulations/Curl/Curl_results/Curl_sim_boxplot.png", 
+ggsave("./Simulations/Curl/Curl_plots/Curl_sim_boxplot_BestSEDR.png", 
        plot = boxplot_with_label, 
-       width = 12, height = 5, units = "in", dpi = 300, bg = "transparent")
+       width = 12, height = 8, units = "in", dpi = 300, bg = "transparent")
 
