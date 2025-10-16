@@ -4,10 +4,16 @@ library(purrr)
 library(mclust)
 library(tidyr)
 library(stringr)
+
 #-------------------------------------------------------------------------------
+# Config
 set.seed(42)
+setwd("~/Desktop/DP-RST-workload")
+#-------------------------------------------------------------------------------
 ### BayesSpace ###
+#-------------------------------------------------------------------------------
 library(BayesSpace)
+
 sce_brain <- readVisium("Brain/Space_Ranger_Data_Brain")
 
 brain <- spatialPreprocess(sce_brain)
@@ -132,7 +138,7 @@ print(ari_pc10)
 
 #-------------------------------------------------------------------------------
 ##### SC-MEB #####
-set.seed(42)
+#-------------------------------------------------------------------------------
 
 library(SC.MEB)
 load("Brain/DFPLC_151510_data_for_iIMPACT.RData")
@@ -394,7 +400,7 @@ ggplot(brain_subset, aes(x = x, y = y, color = as.factor(cluster_q7_pc3))) +
   ggtitle("Clustering result: PC=3, K=7")
 
 #-------------------------------------------------------------------------------
-##### k-means#####
+##### k-means #####
 set.seed(42)
 load("Brain/DFPLC_151510_data_for_iIMPACT.RData")
 
@@ -481,5 +487,19 @@ ggplot(brain_subset, aes(x = x, y = y, color = as.factor(pc3_k7))) +
   coord_fixed() +  # keep aspect ratio
   theme_minimal() +
   ggtitle("Clustering result: PC=3, K=7")
+#-------------------------------------------------------------------------------
+##### BASS #####
+
+
+
+
+
+
+
+
+
+
+
+
 
 
