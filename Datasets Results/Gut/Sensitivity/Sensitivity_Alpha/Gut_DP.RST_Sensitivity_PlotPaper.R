@@ -40,13 +40,24 @@ bnd_scaled <- list(
 # ----------------------------------------------------------------------
 # Sensitivity file paths (alpha variants)
 # ----------------------------------------------------------------------
+
 file_paths <- c(
-  "Sensitivity/Gut_DP.RST_Sensitivity_alpha005_OutputOnly.RData",
-  "Sensitivity/Gut_DP.RST_Sensitivity_alpha01_OutputOnly.RData",
-  "Sensitivity/Gut_DP.RST_Sensitivity_alpha02_OutputOnly.RData",
+  "Sensitivity/Sensitivity_Alpha/PC3/Gut_DP.RST_Sensitivity_alpha005_OutputOnly.RData",
+  "Sensitivity/Sensitivity_Alpha/PC3/Gut_DP.RST_Sensitivity_alpha01_OutputOnly.RData",
+  "Sensitivity/Sensitivity_Alpha/PC3/Gut_DP.RST_Sensitivity_alpha02_OutputOnly.RData",
   "Results/Gut_DP.RST_FromNewBastPT_p3_Version2_OutputOnly.RData", # alpha = 0.5
-  "Sensitivity/Gut_DP.RST_Sensitivity_alpha1_OutputOnly.RData"
+  "Sensitivity/Sensitivity_Alpha/PC3/Gut_DP.RST_Sensitivity_alpha1_OutputOnly.RData"
 )
+
+# file_paths <- c(
+#   "Sensitivity/Sensitivity_Alpha/PC10/Gut_DPRST_PT_alpha0.05_OutputOnly.RData",
+#   "Sensitivity/Sensitivity_Alpha/PC10/Gut_DPRST_PT_alpha0.10_OutputOnly.RData",
+#   "Sensitivity/Sensitivity_Alpha/PC10/Gut_DPRST_PT_alpha0.20_OutputOnly.RData",
+#   # "Sensitivity/Sensitivity_Alpha/PC10/Gut_DPRST_PT_alpha0.30_OutputOnly.RData",
+#   "Results/Gut_DP.RST_FromNewBastPT_p10_Version2_OutputOnly.RData", # alpha = 0.5
+#   # "Sensitivity/Sensitivity_Alpha/PC10/Gut_DPRST_PT_alpha0.70_OutputOnly.RData",
+#   "Sensitivity/Sensitivity_Alpha/PC10/Gut_DPRST_PT_alpha1.00_OutputOnly.RData"
+# )
 
 # Containers for final "Alpha Overview" figure
 hist_list <- list()     # per-alpha histograms of # refined clusters
@@ -57,7 +68,7 @@ alpha_vals <- numeric() # actual alpha read from each output
 ##### FUNCTION TO REORDER CLUSTER LABELS BASED ON THE REFERENCE VECTOR #####
 
 # Create a reference vector with values from 1 to 9
-reference_vector <- c(1:5)
+reference_vector <- c(1:8)
 
 # Define a function to reorder a cluster assignments vector based on a reference vector
 reorder_based_on_reference <- function(cluster_vector, reference_vector) {
@@ -74,7 +85,16 @@ reorder_based_on_reference <- function(cluster_vector, reference_vector) {
 }
 
 # Define a custom color palette for plotting
-my_palette1 <- c("#FCDD23FF", "#AD98F1FF", "#D856A7FF", "#F8B100FF", "#48439BFF")
+my_palette1 <- c(
+  "#FCDD23FF",  # bright yellow
+  "#AD98F1FF",  # light lavender
+  "#D856A7FF",  # magenta pink
+  "#F8B100FF",  # orange-gold
+  "#48439BFF",  # deep indigo
+  "#70C1B3FF",  # soft teal
+  "#F28E8EFF",  # warm coral
+  "#7F4F24FF"   # earthy muted brown
+)
 
 #-------------------------------------------------------------------------------
 
@@ -99,11 +119,11 @@ for (fp in file_paths) {
   teams_freq <- as.data.frame(table(output$j_teams_out))
   
   hist_list[[counter]] <- ggplot(teams_freq, aes(x = Var1, y = Freq)) +
-    geom_bar(stat = "identity", color = "black", fill = "lightblue") +
+    geom_bar(stat = "identity", color = "#C497A7", fill = "#F8E6EC") +
     labs(title = bquote(alpha == .(alpha_grid[counter])),
          x = "# of Refined Clusters", y = "Frequency") +
     theme_classic()
-  
+
   # ---------------- Best partitions (MODE only) -----------------------
   mode_based_partition <- partition(output, method = "mode_based", batch_size = 100)
   
@@ -144,4 +164,4 @@ grid.arrange(grobs = all_plots, ncol = 5, nrow = 2)
 final_plot <- arrangeGrob(grobs = all_plots, ncol = 5, nrow = 2)
 
 # Save as PDF in the "Sensitivity" folder
-ggsave("Sensitivity/Sensetivity_Alpha.pdf", final_plot, width = 15, height = 6)
+ggsave("Sensitivity/Sensitivity_Alpha/PC3/Sensetivity_Alpha_PC3.pdf", final_plot, width = 15, height = 6)
