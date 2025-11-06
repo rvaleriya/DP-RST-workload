@@ -164,4 +164,4 @@ grid.arrange(grobs = all_plots, ncol = 5, nrow = 2)
 final_plot <- arrangeGrob(grobs = all_plots, ncol = 5, nrow = 2)
 
 # Save as PDF in the "Sensitivity" folder
-ggsave("Sensitivity/Sensitivity_Alpha/PC3/Sensetivity_Alpha_PC3.pdf", final_plot, width = 15, height = 6)
+ggsave("Sensitivity/Sensitivity_Alpha/PC3/Sensitivity_Alpha_PC3.pdf", final_plot, width = 15, height = 6)
