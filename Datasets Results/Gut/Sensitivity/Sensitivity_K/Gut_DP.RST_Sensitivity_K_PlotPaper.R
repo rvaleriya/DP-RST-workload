@@ -40,21 +40,21 @@ bnd_scaled <- list(
 # Sensitivity file paths (K variants)
 # ----------------------------------------------------------------------
 
-file_paths <- c(
-  "Sensitivity/Sensitivity_K/PC3/Gut_DPRST_PT_k05_OutputOnly.RData",
-  "Sensitivity/Sensitivity_K/PC3/Gut_DPRST_PT_k10_OutputOnly.RData",
-  "Sensitivity/Sensitivity_K/PC3/Gut_DPRST_PT_k15_OutputOnly.RData",
-  "Results/Gut_DP.RST_FromNewBastPT_p3_Version2_OutputOnly.RData", # K = 20
-  "Sensitivity/Sensitivity_K/PC3/Gut_DPRST_PT_k25_OutputOnly.RData"
-)
-
 # file_paths <- c(
-#   "Sensitivity/Sensitivity_K/PC10/Gut_DPRST_PT_k05_OutputOnly.RData",
-#   "Sensitivity/Sensitivity_K/PC10/Gut_DPRST_PT_k10_OutputOnly.RData",
-#   "Sensitivity/Sensitivity_K/PC10/Gut_DPRST_PT_k15_OutputOnly.RData",
-#   "Results/Gut_DP.RST_FromNewBastPT_p10_Version2_OutputOnly.RData", # K = 20
-#   "Sensitivity/Sensitivity_K/PC10/Gut_DPRST_PT_k25_OutputOnly.RData"
+#   "Sensitivity/Sensitivity_K/PC3/Gut_DPRST_PT_k05_OutputOnly.RData",
+#   "Sensitivity/Sensitivity_K/PC3/Gut_DPRST_PT_k10_OutputOnly.RData",
+#   "Sensitivity/Sensitivity_K/PC3/Gut_DPRST_PT_k15_OutputOnly.RData",
+#   "Results/Gut_DP.RST_FromNewBastPT_p3_Version2_OutputOnly.RData", # K = 20
+#   "Sensitivity/Sensitivity_K/PC3/Gut_DPRST_PT_k25_OutputOnly.RData"
 # )
+
+file_paths <- c(
+  "Sensitivity/Sensitivity_K/PC10/Gut_DPRST_PT_k05_OutputOnly.RData",
+  "Sensitivity/Sensitivity_K/PC10/Gut_DPRST_PT_k10_OutputOnly.RData",
+  "Sensitivity/Sensitivity_K/PC10/Gut_DPRST_PT_k15_OutputOnly.RData",
+  "Results/Gut_DP.RST_FromNewBastPT_p10_Version2_OutputOnly.RData", # K = 20
+  "Sensitivity/Sensitivity_K/PC10/Gut_DPRST_PT_k25_OutputOnly.RData"
+)
 
 # Containers for final "K Overview" figure
 mode_list <- list()     # per-K mode refined partition plots
@@ -150,6 +150,6 @@ grid.arrange(grobs = all_plots, ncol = 5, nrow = 1)
 final_plot <- arrangeGrob(grobs = all_plots, ncol = 5, nrow = 1)
 
 # Save as PDF in the "Sensitivity" folder
-ggsave("Sensitivity/Sensitivity_K/PC3/Sensitivity_K_PC3.pdf", final_plot, 
+ggsave("Sensitivity/Sensitivity_K/PC10/Sensitivity_K_PC10.pdf", final_plot, 
        width = 15, height = 3)
 
