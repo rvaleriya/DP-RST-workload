@@ -4,10 +4,11 @@ library(DP.RST)
 library(mclust)
 library(ggplot2)
 library(readr)
+library(dplyr)
 
 #-------------------------------------------------------------------------------
 # Set working directory
-setwd("~/Desktop/DP-RST-workload")
+setwd("~/Desktop/DP-RST-workload/Datasets Results/Gut")
 getwd()
 
 # Set seed
@@ -19,8 +20,8 @@ options(error=recover)
 ##### LOAD PRE-PROCESSED INTESTINE DATA #####
 
 # Load pre-processed data
-gut_df_wt_muscle <- readRDS("./Gut/gut_df_wt_muscle.rds")
-load("./Gut/swiss_roll_wt_muscle_boundary.RData")
+gut_df_wt_muscle <- readRDS("./gut_df_wt_muscle.rds")
+load("swiss_roll_wt_muscle_boundary.RData")
 
 # Extract spatial coordinates and PCs
 Y_sample = gut_df_wt_muscle[, 1:3]
@@ -96,7 +97,7 @@ groups_plot_wB <- function(coords, group_assign, point_size = 2) {
 #-------------------------------------------------------------------------------
 ##### LOAD AND PROCESS DP-RST OUTPUT #####
 
-load("./Gut/DP-RST_Outputs/Gut_DP.RST_FromNewBastPT_Version2_OutputOnly.RData")
+load("./Results/Gut_DP.RST_FromNewBastPT_p3_Version2_OutputOnly.RData")
 output = Gut_DP.RST_FromNewBastPT_Version2
 
 # Get the best partition
@@ -170,7 +171,7 @@ DPM.RST_plot <- groups_plot(coords, DPM_partition, bnd_scaled, point_size = 3) +
 DPM.RST_plot
 
 # Save the refined partition plot as a PNG image with a transparent background (part of the Figure 4)
-ggsave(filename = "./Figures/figure4/DPM-RST_plot.png",
+ggsave(filename = "~/Desktop/DP-RST-workload/Figures/figure3/DPM-RST_plot.png",
        plot = DPM.RST_plot, width = 8, height = 8, bg = "transparent")
 
 #-------------------------------------------------------------------------------
@@ -227,11 +228,41 @@ plot_PC3 <- ggplot(team_data, aes(x = PC3, fill = as.factor(obs_teams_assign))) 
 hist_DPM <- gridExtra::grid.arrange(plot_PC1, plot_PC2, plot_PC3, ncol = 3)
 hist_DPM
 
-# Save the arranged density plots as a PNG image (part of the Figure 4)
-ggsave("./Figures/figure4/hist_DP-RST.png",
-       plot = hist_DPM, width = 7.97, height = 5.35,
-       units = "in", dpi = 300, bg = "transparent")
+# # Save the arranged density plots as a PNG image (part of the Figure 4)
+# ggsave("./Figures/figure4/hist_DP-RST.png",
+#        plot = hist_DPM, width = 7.97, height = 5.35,
+#        units = "in", dpi = 300, bg = "transparent")
 
+#-------------------------------------------------------------------------------
+##### HISTOGRAM OF REFINED CLUSTERS (MCMC ITERATIONS) #####
+
+# Extract the frequency of team counts across all MCMC iterations
+# output$j_teams_out contains the number of teams for each iteration
+teams_freq <- as.data.frame(table(output$j_teams_out))
+
+# Plot the histogram
+cluster_count_hist <- ggplot(teams_freq, aes(x = Var1, y = Freq)) +
+  geom_bar(stat = "identity", color = "#C497A7", fill = "#F8E6EC", width = 0.8) +
+  labs(title = "Posterior Distribution of Refined Clusters",
+       # subtitle = "Number of Teams over MCMC Iterations",
+       x = "Number of Refined Clusters", 
+       y = "Frequency") +
+  theme_minimal(base_size = 18) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5),
+    panel.grid.major.x = element_blank(), # Remove vertical grid lines for cleaner look
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+
+# Display the plot
+print(cluster_count_hist)
+
+# Save the histogram as a PNG image (part of Figure 4)
+ggsave("~/Desktop/DP-RST-workload/Figures/figure3/hist_MCMC_clusters.png",
+       plot = cluster_count_hist, width = 8, height = 6,
+       units = "in", dpi = 300, bg = "transparent")
 #-------------------------------------------------------------------------------
 ##### CREATE PLOTS FOR THE FIGURE 1 #####
 
@@ -297,7 +328,7 @@ ggsave(filename = "./Figures/figure4/DP-RST_crude_Figure1.png",
 #-------------------------------------------------------------------------------
 ##### LOAD BAYES-SPACE RESULTS #####
 
-BayesSpace_Gut_clustering_results <- readRDS("./Gut/BayesSpace_Gut_clustering_results.rds")
+BayesSpace_Gut_clustering_results <- readRDS("./Results/BayesSpace_Gut_clustering_results.rds")
 
 BS.df <- data.frame(x = BayesSpace_Gut_clustering_results$imagerow, 
                     y = BayesSpace_Gut_clustering_results$imagecol, 
@@ -336,13 +367,13 @@ BS_plot <- groups_plot_wB(BS_merged_df[, 1:2], BS_partition, point_size = 3) +
 BS_plot
 
 # Save the BayesSpace partition plot as a PNG image (part of Figure 4)
-ggsave(filename = "./Figures/figure4/BS_plot.png",
+ggsave(filename = "~/Desktop/DP-RST-workload/Figures/figure3/BS_plot.png",
        plot = BS_plot, width = 8, height = 8, bg = "transparent")
 
 #-------------------------------------------------------------------------------
 ##### LOAD SC-MEB RESULTS #####
 
-SC_MEB_Gut_clustering_results <- readRDS("./Gut/SC-MEB_Gut_clustering_results.rds")
+SC_MEB_Gut_clustering_results <- readRDS("./Results/SC-MEB_Gut_clustering_results.rds")
 
 SC_MEB.df <- data.frame(x = SC_MEB_Gut_clustering_results$x, 
                     y = SC_MEB_Gut_clustering_results$y, 
@@ -387,7 +418,7 @@ ggsave(filename = "./Figures/figure4/SC.MEB_plot.png",
 #-------------------------------------------------------------------------------
 ##### LOAD DR-SC RESULTS #####
 
-DR_SC_Gut_clustering_results <- readRDS("./Gut/DR-SC_Gut_clustering_results.rds")
+DR_SC_Gut_clustering_results <- readRDS("./Results/DR-SC_Gut_clustering_results.rds")
 
 DR_SC.df <- data.frame(x = DR_SC_Gut_clustering_results$imagerow, 
                         y = DR_SC_Gut_clustering_results$imagecol, 
@@ -431,9 +462,9 @@ ggsave(filename = "./Figures/figure4/DR.SC_plot.png",
 
 
 #-------------------------------------------------------------------------------
-##### LOAD DR-SC RESULTS #####
+##### LOAD kmeans RESULTS #####
 
-kmeans_Gut_clustering_results <- readRDS("./Gut/kmeans_Gut_clustering_results.rds")
+kmeans_Gut_clustering_results <- readRDS("./Results/kmeans_Gut_clustering_results.rds")
 
 kmeans.df <- data.frame(x = kmeans_Gut_clustering_results$x, 
                        y = kmeans_Gut_clustering_results$y, 
@@ -475,6 +506,50 @@ kmeans_plot
 ggsave(filename = "./Figures/figure4/kmeans_plot.png",
        plot = kmeans_plot, width = 8, height = 8, bg = "transparent")
 
+#-------------------------------------------------------------------------------
+##### LOAD BASS RESULTS #####
+
+BASS_Gut_clustering_results <- readRDS("./Results/BASS_Intestine_3PCs.rds")
+
+bass.df <- data.frame(x = BASS_Gut_clustering_results$x, 
+                      y = BASS_Gut_clustering_results$y, 
+                      bass_z = BASS_Gut_clustering_results$z)
+
+bass_merged_df <- merge(bass.df, df_subset,
+                        by = c("x", "y"),
+                        all = TRUE)
+
+bass_accur = adjustedRandIndex(bass_merged_df$z, bass_merged_df$bass_z)
+bass_accur # 0.2790147
+
+# Reorder the partition based on a reference vector
+bass_partition <- reorder_based_on_reference(bass_merged_df$bass_z, reference_vector)
+
+bass_plot <- groups_plot_wB(bass_merged_df[, 1:2], bass_partition, point_size = 3) +
+  scale_color_manual(values = my_palette1) +
+  theme_minimal(base_size = 20) +
+  geom_point(size = 6) +
+  theme(
+    legend.position = "none",
+    panel.background = element_rect(fill = "transparent", colour = NA),
+    plot.background = element_rect(fill = "transparent", color = NA),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    axis.line = element_blank(),
+    axis.title.x = element_blank(),  # No x-axis title
+    axis.title.y = element_blank(),  # No y-axis title
+    plot.title = element_text(size = 35)
+  ) +
+  ggtitle(bquote(bold("BASS") * ", c = 5, " * bold("ARI = ") * bold(.(format(round(bass_accur, 3), nsmall = 3)))))
+
+bass_plot
+
+# Save the BASS partition plot as a PNG image (part of Figure 4)
+ggsave(filename = "~/Desktop/DP-RST-workload/Figures/figure3/BASS_plot.png",
+       plot = bass_plot, width = 8, height = 8, bg = "transparent")
 
 #-------------------------------------------------------------------------------
 ##### LOAD SEDR RESULTS #####
@@ -773,3 +848,57 @@ stlearn_plot_without
 # Save the k-means partition plot as a PNG image (part of Figure 4)
 ggsave(filename = "./Figures/figure4/stlearn_without_plot.png",
        plot = stlearn_plot_without, width = 8, height = 8, bg = "transparent")
+
+#-------------------------------------------------------------------------------
+##### LOAD SpaMask RESULTS #####
+
+SpaMask_gut_results <- read_csv("~/Desktop/DP-RST-workload/Datasets Results/Gut/Results/SpaMask_Gut_3PCs.csv")
+
+SpaMask.df <- data.frame(y = SpaMask_gut_results$x, 
+                         x = SpaMask_gut_results$y, 
+                         SpaMask_z = SpaMask_gut_results$kmeans)
+# Fix SpaMask.df so columns follow (x, y) convention
+SpaMask.df.fixed <- SpaMask.df %>%
+  dplyr::rename(
+    x = y,
+    y = x
+  )
+
+SpaMask_merged_df <- merge(
+  SpaMask.df.fixed,
+  df_subset,
+  by = c("x", "y"),
+  all = TRUE
+)
+
+SpaMask_accur = adjustedRandIndex(SpaMask_merged_df$z, SpaMask_merged_df$SpaMask_z)
+SpaMask_accur # 0.2000117
+
+# Reorder the partition based on a reference vector
+SpaMask_partition <- reorder_based_on_reference(SpaMask_merged_df$SpaMask_z + 1, reference_vector)
+
+SpaMask_plot <- groups_plot_wB(SpaMask_merged_df[, 1:2], SpaMask_partition, point_size = 3) +
+  scale_color_manual(values = my_palette1) +
+  theme_minimal(base_size = 20) +
+  geom_point(size = 6) +
+  theme(
+    legend.position = "none",
+    panel.background = element_rect(fill = "transparent", colour = NA),
+    plot.background = element_rect(fill = "transparent", color = NA),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    axis.line = element_blank(),
+    axis.title.x = element_blank(),  # No x-axis title
+    axis.title.y = element_blank(),  # No y-axis title
+    plot.title = element_text(size = 35)
+  ) +
+  ggtitle(bquote(bold("SpaMask") * ", c = 5, " * bold("ARI = ") * bold(.(format(round(SpaMask_accur, 3), nsmall = 3)))))
+
+SpaMask_plot
+
+# Save the k-means partition plot as a PNG image (part of Figure 4)
+ggsave(filename = "~/Desktop/DP-RST-workload/Figures/figure3/SpaMask_plot.png",
+       plot = SpaMask_plot, width = 8, height = 8, bg = "transparent")
