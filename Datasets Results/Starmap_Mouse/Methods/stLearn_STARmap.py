@@ -1,161 +1,234 @@
-# ======== stLearn on STARmap with SME normalization ========
+#!/usr/bin/env python3
+"""
+stLearn clustering analysis for STARmap dataset with histology image processing.
+"""
 import numpy as np
 import pandas as pd
 from pathlib import Path
 import scanpy as sc
 import stlearn as st
 from sklearn import metrics
+import matplotlib.pyplot as plt
 import warnings
+import random
+import os
+
 warnings.filterwarnings("ignore")
+st.settings.set_figure_params(dpi=120)
 
-# ---------- Paths ----------
-H5AD = "/scratch/user/varogovchenko/BASTION_HPRC/STARmap/STARmap_20180505_BY3_1k_20251008011714.h5ad"
-OUT  = Path("res_starmap"); OUT.mkdir(exist_ok=True)
+# Set seeds for reproducibility
+seed = 42
+np.random.seed(seed)
+random.seed(seed)
+os.environ['PYTHONHASHSEED'] = str(seed)
 
-K = 7
+# Dataset configuration
+DATASET_NAME = "STARmap"
+K = 7  # True number of clusters
+H5AD_PATH = "/scratch/user/varogovchenko/BASTION_HPRC/STARmap/STARmap_20180505_BY3_1k_20251008011714.h5ad"
+OUT_DIR = Path(".")
+TILE_DIR = Path("/tmp/tiles_starmap")
+TILE_DIR.mkdir(parents=True, exist_ok=True)
+
 PCS_LIST = [3, 10]
 N_COMPS = max(PCS_LIST)
-np.random.seed(42)
 
-# ---------- Load data ----------
-print("Loading data...")
-adata = sc.read_h5ad(H5AD)
+print(f"=== Processing {DATASET_NAME} ===")
+print(f"H5AD path: {H5AD_PATH}")
+
+# Load data
+print("\nLoading data...")
+adata = sc.read_h5ad(H5AD_PATH)
+adata.var_names_make_unique()
 
 # Ensure spatial coordinates are in obsm
 if "spatial" not in adata.obsm:
-    adata.obsm["spatial"] = adata.obs[["x","y"]].to_numpy()
+    if "x" in adata.obs.columns and "y" in adata.obs.columns:
+        adata.obsm["spatial"] = adata.obs[["x", "y"]].to_numpy()
+    elif "X" in adata.obs.columns and "Y" in adata.obs.columns:
+        adata.obsm["spatial"] = adata.obs[["X", "Y"]].to_numpy()
+    else:
+        raise ValueError("Could not find spatial coordinates")
 
 # Store original counts
 adata.layers["counts"] = adata.X.copy()
 
 # Create dummy Visium-like fields (required by stLearn)
 xy = adata.obsm["spatial"]
-adata.obs["imagerow"] = np.round(xy[:,1]).astype(int)
-adata.obs["imagecol"] = np.round(xy[:,0]).astype(int)
+adata.obs["imagerow"] = np.round(xy[:, 1]).astype(int)
+adata.obs["imagecol"] = np.round(xy[:, 0]).astype(int)
 adata.obs["array_row"] = adata.obs["imagerow"]
 adata.obs["array_col"] = adata.obs["imagecol"]
 
-# Create dummy morphology features (required by stLearn, even if not used)
-if "X_morphology" not in adata.obsm:
-    adata.obsm["X_morphology"] = np.zeros((adata.n_obs, 8), dtype=float)
-
 print(f"Data loaded: {adata.n_obs} cells, {adata.n_vars} genes")
 
-# ---------- Pre-processing (following stLearn tutorial) ----------
+# Pre-processing for gene count table
 print("\nPre-processing gene count table...")
-
-# Filter, normalize, log transform (as in tutorial)
 st.pp.filter_genes(adata, min_cells=1)
-st.pp.normalize_total(adata)
-st.pp.log1p(adata)
+# Note: Data is already log-normalized, so skip normalize_total and log1p
+print("Skipping normalization and log transformation (data already log-normalized)")
 
-print("Pre-processing complete")
+# Store the already log-normalized data for SME
+# SME expects log-transformed data, so we use the current X (which is already log-normalized)
+adata.obsm["log1p"] = adata.X.copy()
 
-# ---------- Run initial PCA (needed by SME) ----------
+# Pre-processing for spot image (histology)
+print("\nPre-processing histology images...")
+try:
+    st.pp.tiling(adata, out_path=str(TILE_DIR))
+    st.pp.extract_feature(adata)
+    print("Histology features extracted successfully")
+except Exception as e:
+    print(f"Warning: Could not extract histology features: {e}")
+    print("Creating dummy morphology features...")
+    if "X_morphology" not in adata.obsm:
+        adata.obsm["X_morphology"] = np.zeros((adata.n_obs, 8), dtype=float)
+
+# Run initial PCA (needed by SME)
 print(f"\nRunning initial PCA with {N_COMPS} components...")
 st.em.run_pca(adata, n_comps=N_COMPS)
-print("Initial PCA complete")
 
-# ---------- Apply SME normalization ----------
+# Apply SME normalization
 print("\nApplying stSME normalization...")
-
-# Create a copy for SME processing (as in tutorial)
 adata_sme = adata.copy()
 
-# Apply SME normalize on the log-transformed data
-st.spatial.SME.SME_normalize(adata_sme, use_data="raw", platform="Visium", weights="weights_matrix_pd_gd")
+# Apply SME normalize on the log-transformed data (already log-normalized, stored in obsm["log1p"])
+st.spatial.SME.SME_normalize(adata_sme, use_data="log1p", platform="Visium", weights="weights_matrix_pd_gd")
 
 # Guard against NaNs/Infs from SME
-adata_sme.obsm["raw_SME_normalized"] = np.nan_to_num(
-    adata_sme.obsm["raw_SME_normalized"], 
-    nan=0.0, 
-    posinf=0.0, 
+adata_sme.obsm["log1p_SME_normalized"] = np.nan_to_num(
+    adata_sme.obsm["log1p_SME_normalized"],
+    nan=0.0,
+    posinf=0.0,
     neginf=0.0
 )
 
-# Set SME-normalized data as main matrix (as in tutorial)
-adata_sme.X = adata_sme.obsm['raw_SME_normalized']
+# Set SME-normalized data as main matrix
+adata_sme.X = adata_sme.obsm['log1p_SME_normalized']
 
-print("stSME normalization complete")
-
-# ---------- Scale and run PCA on SME-normalized data ----------
+# Scale and run PCA on SME-normalized data
 print("\nScaling SME-normalized data...")
 st.pp.scale(adata_sme)
-
-# Ensure no NaNs/Infs after scaling
 adata_sme.X = np.nan_to_num(adata_sme.X, nan=0.0, posinf=0.0, neginf=0.0)
 
 print(f"Running final PCA with {N_COMPS} components on SME-normalized data...")
 st.em.run_pca(adata_sme, n_comps=N_COMPS)
-print("Final PCA complete")
 
-# ---------- Run clustering for different PC counts ----------
+# Run clustering for different PC counts
 print("\nRunning k-means clustering...")
-
 for n_pcs in PCS_LIST:
     print(f"  Clustering with {n_pcs} PCs, k={K}...")
-    
-    # Extract subset of PCs for this run
     adata_sme.obsm["X_pca_subset"] = adata_sme.obsm["X_pca"][:, :n_pcs].copy()
-    
-    # Run k-means clustering (as in tutorial)
     st.tl.clustering.kmeans(
-        adata_sme, 
-        n_clusters=K, 
-        use_data="X_pca_subset", 
-        key_added=f"label_{n_pcs}PCs"
+        adata_sme,
+        n_clusters=K,
+        use_data="X_pca_subset",
+        key_added=f"label_{n_pcs}PCs",
+        algorithm="lloyd"
     )
-    
     print(f"    Clustering complete for {n_pcs} PCs")
 
-# ---------- Save combined results ----------
+# Save combined results
 print("\nSaving results...")
 xy = adata_sme.obsm["spatial"]
-out = pd.DataFrame({
+results_df = pd.DataFrame({
     "ID": adata_sme.obs_names,
-    "x": xy[:,0],
-    "y": xy[:,1],
+    "x": xy[:, 0],
+    "y": xy[:, 1],
     f"label_3PCs_k{K}": adata_sme.obs["label_3PCs"],
     f"label_10PCs_k{K}": adata_sme.obs["label_10PCs"]
 })
 
-out_path = OUT / f"stlearn_STARmap_3PCs_10PCs.csv"
-out.to_csv(out_path, index=False)
-print(f"✅ Saved combined labels: {out_path}")
+csv_path = OUT_DIR / f"stLearn_{DATASET_NAME}.csv"
+results_df.to_csv(csv_path, index=False)
+print(f"Saved results to: {csv_path}")
 
-# ---------- Compute and save ARI ----------
-if "ground_truth" in adata_sme.obs.columns:
-    print("\nComputing ARI scores...")
-    
-    gt = pd.Categorical(adata_sme.obs["ground_truth"].astype(str)).codes
-    pr3 = pd.Categorical(adata_sme.obs["label_3PCs"]).codes
-    pr10 = pd.Categorical(adata_sme.obs["label_10PCs"]).codes
-    
-    ari3 = metrics.adjusted_rand_score(gt, pr3)
-    ari10 = metrics.adjusted_rand_score(gt, pr10)
-    
-    print(f"\n{'='*50}")
-    print(f"RESULTS:")
-    print(f"{'='*50}")
-    print(f"  ARI (3 PCs, k={K}):  {ari3:.4f}")
-    print(f"  ARI (10 PCs, k={K}): {ari10:.4f}")
-    print(f"{'='*50}")
-    
-    # Save ARI summary
-    ari_path = OUT / "stlearn_STARmap_ARI.txt"
-    with open(ari_path, "w") as f:
-        f.write(f"stSME-based clustering results (k={K}):\n")
-        f.write(f"="*50 + "\n")
-        f.write(f"3PCs:  ARI = {ari3:.6f}\n")
-        f.write(f"10PCs: ARI = {ari10:.6f}\n")
-    
-    print(f"✅ Saved ARI summary: {ari_path}")
+# Find ground truth column
+ground_truth_col = None
+for gt_col in ['ground_truth', 'true_labels', 'label', 'cluster', 'cell_type']:
+    if gt_col in adata_sme.obs.columns:
+        ground_truth_col = gt_col
+        break
+
+# Compute ARI scores
+print("\nComputing ARI scores...")
+ari_results = {}
+if ground_truth_col:
+    print(f"Using '{ground_truth_col}' as ground truth")
+    valid_mask = ~adata_sme.obs[ground_truth_col].isna()
+    if valid_mask.sum() > 0:
+        gt = pd.Categorical(adata_sme.obs.loc[valid_mask, ground_truth_col].astype(str)).codes
+        for n_pcs in PCS_LIST:
+            pr = pd.Categorical(adata_sme.obs.loc[valid_mask, f"label_{n_pcs}PCs"]).codes
+            ari = metrics.adjusted_rand_score(gt, pr)
+            ari_results[n_pcs] = ari
+            print(f"  ARI ({n_pcs} PCs, k={K}): {ari:.6f}")
+        if valid_mask.sum() < len(adata_sme):
+            print(f"Note: Calculated ARI on {valid_mask.sum()} out of {len(adata_sme)} observations")
+    else:
+        print("Warning: No valid ground truth labels found (all are NA)")
 else:
-    print("\n⚠️  No ground_truth column found — ARI computation skipped.")
+    print("Warning: No ground truth column found")
 
-# ---------- Save the processed AnnData object ----------
-# adata_path = OUT / "stlearn_STARmap_SME_processed.h5ad"
-# adata_sme.write(adata_path)
-# print(f"✅ Saved processed AnnData: {adata_path}")
+# Save ARI summary
+ari_path = OUT_DIR / f"stLearn_{DATASET_NAME}_ARI.txt"
+with open(ari_path, "w") as f:
+    f.write(f"stSME-based clustering results for {DATASET_NAME}\n")
+    f.write("=" * 50 + "\n")
+    if ground_truth_col:
+        f.write(f"Ground truth column: {ground_truth_col}\n")
+    f.write(f"Number of clusters: {K}\n")
+    f.write("=" * 50 + "\n")
+    for n_pcs in PCS_LIST:
+        if n_pcs in ari_results:
+            f.write(f"{n_pcs}PCs: ARI = {ari_results[n_pcs]:.6f}\n")
+        else:
+            f.write(f"{n_pcs}PCs: ARI calculation skipped\n")
+print(f"Saved ARI summary to: {ari_path}")
 
-print("\n stLearn clustering pipeline complete!")
+# Create plot with 3 columns (3PCs, 10PCs, ground truth)
+if "spatial" in adata_sme.obsm:
+    print("\nCreating visualization plot...")
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+    spatial_coords = adata_sme.obsm['spatial']
+    
+    # Plot 3PCs clustering
+    scatter1 = axes[0].scatter(spatial_coords[:, 0], spatial_coords[:, 1],
+                               c=pd.Categorical(adata_sme.obs["label_3PCs"]).codes,
+                               cmap='tab20', s=5)
+    axes[0].set_title(f'{DATASET_NAME} - 3 PCs, k={K}')
+    axes[0].set_xlabel('X coordinate')
+    axes[0].set_ylabel('Y coordinate')
+    axes[0].set_aspect('equal', adjustable='box')
+    
+    # Plot 10PCs clustering
+    scatter2 = axes[1].scatter(spatial_coords[:, 0], spatial_coords[:, 1],
+                               c=pd.Categorical(adata_sme.obs["label_10PCs"]).codes,
+                               cmap='tab20', s=5)
+    axes[1].set_title(f'{DATASET_NAME} - 10 PCs, k={K}')
+    axes[1].set_xlabel('X coordinate')
+    axes[1].set_ylabel('Y coordinate')
+    axes[1].set_aspect('equal', adjustable='box')
+    
+    # Plot ground truth
+    if ground_truth_col:
+        scatter3 = axes[2].scatter(spatial_coords[:, 0], spatial_coords[:, 1],
+                                   c=pd.Categorical(adata_sme.obs[ground_truth_col]).codes,
+                                   cmap='tab20', s=5)
+        axes[2].set_title(f'{DATASET_NAME} - Ground Truth')
+        axes[2].set_xlabel('X coordinate')
+        axes[2].set_ylabel('Y coordinate')
+        axes[2].set_aspect('equal', adjustable='box')
+    else:
+        axes[2].text(0.5, 0.5, 'No ground truth\navailable',
+                    ha='center', va='center', transform=axes[2].transAxes)
+        axes[2].set_title(f'{DATASET_NAME} - Ground Truth (N/A)')
+    
+    plt.tight_layout()
+    plot_path = OUT_DIR / f"stLearn_{DATASET_NAME}_plot.png"
+    plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    print(f"Saved plot to: {plot_path}")
+
+print(f"\n✓ {DATASET_NAME} analysis complete!")
+

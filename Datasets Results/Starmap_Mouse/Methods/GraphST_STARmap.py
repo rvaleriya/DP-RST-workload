@@ -1,121 +1,174 @@
 #!/usr/bin/env python3
 import os
 import sys
+
+# Ensure R_LIBS includes user's Rlibs (modules handle R_HOME and PATH)
+user_rlibs = "/scratch/user/varogovchenko/Rlibs"
+if 'R_LIBS' in os.environ:
+    if user_rlibs not in os.environ['R_LIBS']:
+        os.environ['R_LIBS'] = f"{user_rlibs}:{os.environ['R_LIBS']}"
+else:
+    # If R_LIBS not set by modules, set it with user's Rlibs
+    r_home = os.environ.get('R_HOME', '/sw/eb/sw/R/4.4.2-gfbf-2024a')
+    os.environ['R_LIBS'] = f"{user_rlibs}:{r_home}/lib64/R/library"
 import torch
 import scanpy as sc
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 from sklearn import metrics
-import matplotlib.pyplot as plt  # not used for plots now, but harmless if imported
+import random
+
+# Set random seeds for reproducibility
+seed = 42
+random.seed(seed)
+np.random.seed(seed)
+torch.manual_seed(seed)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
 
 from GraphST import GraphST
-sys.path.append('GraphST/GraphST')
+sys.path.append('../GraphST/GraphST')
 from utils import clustering
 
-# ----------------- Config -----------------
-H5AD = "/scratch/user/varogovchenko/BASTION_HPRC/STARmap/STARmap_20180505_BY3_1k_20251008011714.h5ad"
-OUTPUT_CSV = "GraphST_STARmap_3PCs_10PCs.csv"
-OUTPUT_ARI_TXT = "graphst_starmap_ARI.txt"
-PCA_SETTINGS = [3, 10]
-N_CLUSTERS = 7
-K = N_CLUSTERS  # for printing consistency
+# Configuration
+dataset_name = "STARmap"
+num_clusters = 7
+h5ad_path = "/scratch/user/varogovchenko/BASTION_HPRC/STARmap/STARmap_20180505_BY3_1k_20251008011714.h5ad"
+output_csv = "GraphST_STARmap.csv"
+output_ari = "GraphST_STARmap_ARI.txt"
+output_plot = "GraphST_STARmap_plot.png"
 
-# Redirect stdout/stderr to log file
-logfile = open("GraphST_STARmap_output.log", "w")
-sys.stdout = logfile
-sys.stderr = logfile
-
-# Device
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-print(f"Device: {device}")
+print(f"Using device: {device}")
 
-# ----------------- Load Data -----------------
-adata = sc.read_h5ad(H5AD)
+# Load data
+print(f"\nLoading {dataset_name} dataset...")
+adata = sc.read_h5ad(h5ad_path)
 adata.var_names_make_unique()
-print(adata)
+print(f"Loaded {adata.n_obs} cells and {adata.n_vars} genes")
 
-# ----------------- Preprocessing -----------------
+# Preprocessing
 sc.pp.normalize_total(adata, target_sum=1e4)
 sc.pp.log1p(adata)
 sc.pp.highly_variable_genes(adata, n_top_genes=2000)
 adata = adata[:, adata.var.highly_variable].copy()
+print(f"After HVG filtering: {adata.n_vars} genes")
 
-# ----------------- Prepare Results Table -----------------
-results = pd.DataFrame({'barcode': adata.obs_names})
-if "spatial" in adata.obsm:
+# Find ground truth column
+ground_truth_col = None
+for col in ['ground_truth', 'true_labels', 'label', 'cluster', 'cell_type']:
+    if col in adata.obs.columns:
+        ground_truth_col = col
+        break
+
+# Prepare results dataframe
+results = pd.DataFrame({'barcode': adata.obs_names}, index=adata.obs_names)
+if 'spatial' in adata.obsm:
     results[['x', 'y']] = adata.obsm['spatial']
-else:
-    print("⚠️  adata.obsm['spatial'] is missing; x/y will not be saved.")
-    results['x'] = pd.NA
-    results['y'] = pd.NA
 
-# ----------------- Run GraphST and Clustering for Each PC Setting -----------------
-for n_pc in PCA_SETTINGS:
-    print(f"\n=== Running GraphST with {n_pc} PCs ===")
-    sc.pp.pca(adata, n_comps=n_pc)
+# Run GraphST and cluster with 3PCs
+print("\n=== Running GraphST with 3 PCs ===")
+model_3pc = GraphST.GraphST(adata, device=device)
+adata_3pc = model_3pc.train()
+clustering(adata_3pc, n_clusters=num_clusters, radius=50, method='mclust', refinement=True, n_pcs=3)
+results['mclust_3PCs'] = adata_3pc.obs['mclust'].astype(str).values
 
-    # Train GraphST
-    model = GraphST.GraphST(adata, device=device)
-    adata_run = model.train()
+# Run GraphST and cluster with 10PCs
+print("\n=== Running GraphST with 10 PCs ===")
+model_10pc = GraphST.GraphST(adata, device=device)
+adata_10pc = model_10pc.train()
+clustering(adata_10pc, n_clusters=num_clusters, radius=50, method='mclust', refinement=True, n_pcs=10)
+results['mclust_10PCs'] = adata_10pc.obs['mclust'].astype(str).values
 
-    # Clustering with mclust via rpy2
-    clustering(adata_run, n_clusters=N_CLUSTERS, radius=50, method='mclust', refinement=True)
+# Save results
+results.to_csv(output_csv, index=False)
+print(f"\nSaved results to {output_csv}")
 
-    # Store predicted labels in both 'results' and back into adata.obs
-    col_name_csv = f"mclust_{N_CLUSTERS}_{n_pc}PCs"
-    col_name_obs = f"label_{n_pc}PCs"
+# Calculate ARI scores
+ari_3pc = None
+ari_10pc = None
 
-    labels = adata_run.obs["mclust"].astype(str).values
-    results[col_name_csv] = labels
-
-    # Ensure obs are aligned; GraphST preserves order, so direct assignment is fine
-    adata.obs[col_name_obs] = labels
-
-# ----------------- Save Labels to CSV -----------------
-results.to_csv(OUTPUT_CSV, index=False)
-print(f"✓ Saved all cluster labels to {OUTPUT_CSV}")
-
-# ----------------- Compute and Save ARI (if ground truth exists) -----------------
-if "ground_truth" in adata.obs.columns:
-    print("\nComputing ARI scores...")
-
-    gt = pd.Categorical(adata.obs["ground_truth"].astype(str)).codes
-
-    ari_lines = []
-    print("\n" + "="*50)
-    print("RESULTS:")
-    print("="*50)
-
-    if "label_3PCs" in adata.obs.columns:
-        pr3 = pd.Categorical(adata.obs["label_3PCs"]).codes
-        ari3 = metrics.adjusted_rand_score(gt, pr3)
-        print(f"  ARI (3 PCs, k={K}):  {ari3:.4f}")
-        ari_lines.append(f"3PCs:  ARI = {ari3:.6f}")
+if ground_truth_col:
+    print(f"\nComputing ARI using '{ground_truth_col}' as ground truth...")
+    valid_mask = ~adata.obs[ground_truth_col].isna()
+    
+    if valid_mask.sum() > 0:
+        gt = pd.Categorical(adata.obs.loc[valid_mask, ground_truth_col].astype(str)).codes
+        
+        pr_3pc = pd.Categorical(results.loc[valid_mask, 'mclust_3PCs'].astype(str)).codes
+        ari_3pc = metrics.adjusted_rand_score(gt, pr_3pc)
+        
+        pr_10pc = pd.Categorical(results.loc[valid_mask, 'mclust_10PCs'].astype(str)).codes
+        ari_10pc = metrics.adjusted_rand_score(gt, pr_10pc)
+        
+        print(f"ARI (3PCs): {ari_3pc:.6f}")
+        print(f"ARI (10PCs): {ari_10pc:.6f}")
+        print(f"Calculated on {valid_mask.sum()}/{len(adata)} observations")
     else:
-        print("  ARI (3 PCs): missing label_3PCs — skipped")
+        print("No valid ground truth labels found")
 
-    if "label_10PCs" in adata.obs.columns:
-        pr10 = pd.Categorical(adata.obs["label_10PCs"]).codes
-        ari10 = metrics.adjusted_rand_score(gt, pr10)
-        print(f"  ARI (10 PCs, k={K}): {ari10:.4f}")
-        ari_lines.append(f"10PCs: ARI = {ari10:.6f}")
-    else:
-        print("  ARI (10 PCs): missing label_10PCs — skipped")
+# Save ARI results
+with open(output_ari, 'w') as f:
+    f.write(f"GraphST clustering results for {dataset_name}\n")
+    f.write("="*50 + "\n")
+    f.write(f"Number of clusters: {num_clusters}\n")
+    if ground_truth_col:
+        f.write(f"Ground truth column: {ground_truth_col}\n")
+    f.write("="*50 + "\n")
+    if ari_3pc is not None:
+        f.write(f"ARI (3PCs): {ari_3pc:.6f}\n")
+    if ari_10pc is not None:
+        f.write(f"ARI (10PCs): {ari_10pc:.6f}\n")
+    if ari_3pc is None and ari_10pc is None:
+        f.write("ARI calculation skipped: No valid ground truth labels found.\n")
 
-    print("="*50)
+print(f"Saved ARI results to {output_ari}")
 
-    # Save ARI summary
-    with open(OUTPUT_ARI_TXT, "w") as f:
-        f.write(f"GraphST + mclust clustering results (k={K}):\n")
-        f.write("="*50 + "\n")
-        if ari_lines:
-            for line in ari_lines:
-                f.write(line + "\n")
+# Create plot
+fig, axs = plt.subplots(1, 3, figsize=(18, 5))
+
+if 'spatial' in adata.obsm:
+    # Plot 3PCs results
+    axs[0].scatter(adata.obsm['spatial'][:, 0], adata.obsm['spatial'][:, 1],
+                   c=pd.Categorical(results['mclust_3PCs']).codes, cmap='tab10', s=1)
+    axs[0].set_title(f'{dataset_name} - 3PCs')
+    axs[0].set_xlabel('X')
+    axs[0].set_ylabel('Y')
+    axs[0].set_aspect('equal')
+    
+    # Plot 10PCs results
+    axs[1].scatter(adata.obsm['spatial'][:, 0], adata.obsm['spatial'][:, 1],
+                   c=pd.Categorical(results['mclust_10PCs']).codes, cmap='tab10', s=1)
+    axs[1].set_title(f'{dataset_name} - 10PCs')
+    axs[1].set_xlabel('X')
+    axs[1].set_ylabel('Y')
+    axs[1].set_aspect('equal')
+    
+    # Plot true labels
+    if ground_truth_col:
+        valid_mask = ~adata.obs[ground_truth_col].isna()
+        if valid_mask.sum() > 0:
+            axs[2].scatter(adata.obsm['spatial'][valid_mask, 0], 
+                          adata.obsm['spatial'][valid_mask, 1],
+                          c=pd.Categorical(adata.obs.loc[valid_mask, ground_truth_col].astype(str)).codes,
+                          cmap='tab10', s=1)
+            axs[2].set_title(f'{dataset_name} - True Labels')
         else:
-            f.write("No ARI computed (missing labels or ground truth).\n")
+            axs[2].text(0.5, 0.5, 'No valid\nground truth', ha='center', va='center', transform=axs[2].transAxes)
+            axs[2].set_title(f'{dataset_name} - True Labels (N/A)')
+    else:
+        axs[2].text(0.5, 0.5, 'No ground truth\navailable', ha='center', va='center', transform=axs[2].transAxes)
+        axs[2].set_title(f'{dataset_name} - True Labels (N/A)')
+    axs[2].set_xlabel('X')
+    axs[2].set_ylabel('Y')
+    axs[2].set_aspect('equal')
 
-    print(f"✅ Saved ARI summary: {OUTPUT_ARI_TXT}")
-else:
-    print("\n⚠️  No ground_truth column found — ARI computation skipped.")
+plt.tight_layout()
+plt.savefig(output_plot, dpi=300, bbox_inches='tight')
+plt.close()
+print(f"Saved plot to {output_plot}")
 
-print("\nDone.")
-logfile.close()
+print(f"\nFinished processing {dataset_name}")
+

@@ -13,6 +13,7 @@ from scipy.sparse import issparse
 import torch
 from pathlib import Path
 from sklearn.metrics import adjusted_rand_score as ari
+import matplotlib.pyplot as plt
 
 # =========================
 # Logging
@@ -24,16 +25,17 @@ sys.stderr = logfile
 print(f"--- Script Start: Logging to {LOGFILE} ---")
 
 # =========================
-# Config (STARmap)
+# Config
 # =========================
 H5AD = "/scratch/user/varogovchenko/BASTION_HPRC/STARmap/STARmap_20180505_BY3_1k_20251008011714.h5ad"
-OUTPUT_CSV = "SpaGCN_STARmap_3PCs_10PCs.csv"
+OUTPUT_CSV = "SpaGCN_STARmap.csv"
 OUTPUT_ARI_TXT = "SpaGCN_STARmap_ARI.txt"
+OUTPUT_PLOT = "SpaGCN_STARmap_plot.png"
 
-N_CLUSTERS = 7                    # STARmap: 7 clusters
-NUM_PCS_LIST = [3, 10]            # Evaluate both PC settings
-P_PARAM = 0.5                     # p for search_l
-SEED = 42                         # reproducibility seed
+N_CLUSTERS = 7
+NUM_PCS_LIST = [3, 10]
+P_PARAM = 0.5
+SEED = 42
 
 # =========================
 # Environment / seeds
@@ -52,29 +54,23 @@ adata = sc.read_h5ad(H5AD)
 adata.var_names_make_unique()
 print(adata)
 
-# Coordinates (STARmap): expect obsm['spatial'] with (x, y)
+# Coordinates
 if "spatial" not in adata.obsm:
     raise RuntimeError("STARmap AnnData lacks obsm['spatial'] coordinates.")
 coords = adata.obsm["spatial"]
 if coords.shape[1] < 2:
     raise RuntimeError("obsm['spatial'] must have at least 2 columns (x, y).")
 
-# Map to SpaGCN-expected fields in .obs
 adata.obs["x_array"] = coords[:, 0]
 adata.obs["y_array"] = coords[:, 1]
-adata.obs["x_pixel"] = coords[:, 0]   # No histology; duplicate for compatibility
+adata.obs["x_pixel"] = coords[:, 0]
 adata.obs["y_pixel"] = coords[:, 1]
 
 # =========================
-# Preprocessing (SpaGCN style)
+# Preprocessing
 # =========================
-# spg.prefilter_genes(adata, min_cells=3)   # if available in your SpaGCN
-# spg.prefilter_specialgenes(adata)         # if available
-# Normalize & log
-sc.pp.normalize_per_cell(adata)
+sc.pp.normalize_total(adata, target_sum=1e4)
 sc.pp.log1p(adata)
-
-# HVGs + PCA once
 sc.pp.highly_variable_genes(adata, n_top_genes=2000, subset=True)
 max_pcs = max(NUM_PCS_LIST)
 sc.tl.pca(adata, n_comps=max_pcs)
@@ -96,6 +92,15 @@ l = spg.search_l(P_PARAM, adj)
 print("Recommended l =", l)
 
 # =========================
+# Check for ground truth
+# =========================
+ground_truth_col = None
+for gt_col in ['ground_truth', 'true_labels', 'label', 'cluster', 'cell_type']:
+    if gt_col in adata.obs.columns:
+        ground_truth_col = gt_col
+        break
+
+# =========================
 # Results container
 # =========================
 results = pd.DataFrame({
@@ -113,14 +118,11 @@ for num_pcs in NUM_PCS_LIST:
     print(f"Running SpaGCN with {num_pcs} PCs (k={N_CLUSTERS})")
     print("="*60)
 
-    # Prepare PCs for SpaGCN (SpaGCN reads adata.obsm['X_pca'])
     adata_run = adata.copy()
     adata_run.obsm["X_pca"] = adata_run.obsm["X_pca"][:, :num_pcs]
 
-    # Search resolution for desired clusters
     r_seed = t_seed = n_seed = SEED
     print(f"Searching resolution for n_clusters={N_CLUSTERS} ...")
-    # search_res will use adata.obsm['X_pca'] if present
     res = spg.search_res(
         adata_run, adj, l, N_CLUSTERS,
         start=0.7, step=0.1, tol=5e-3, lr=0.05, max_epochs=20,
@@ -128,7 +130,6 @@ for num_pcs in NUM_PCS_LIST:
     )
     print("Recommended res =", res)
 
-    # Train SpaGCN
     clf = spg.SpaGCN()
     clf.set_l(l)
     random.seed(r_seed); torch.manual_seed(t_seed); np.random.seed(n_seed)
@@ -142,7 +143,6 @@ for num_pcs in NUM_PCS_LIST:
     adata_run.obs["pred"] = pd.Categorical(y_pred)
     print("Initial prediction stored in adata_run.obs['pred']")
 
-    # Refine (STARmap grid → 'square')
     print("Refining clusters (shape='square')...")
     adj_2d = spg.calculate_adj_matrix(x=x_array, y=y_array, histology=False)
     refined = spg.refine(
@@ -154,28 +154,29 @@ for num_pcs in NUM_PCS_LIST:
     adata_run.obs["refined_pred"] = pd.Categorical(refined)
     print("Refined prediction stored in adata_run.obs['refined_pred']")
 
-    # Save columns
     col_init = f"pred_{num_pcs}PCs_k{N_CLUSTERS}"
     col_ref  = f"refined_pred_{num_pcs}PCs_k{N_CLUSTERS}"
     results[col_init] = adata_run.obs["pred"].astype(str).values
     results[col_ref]  = adata_run.obs["refined_pred"].astype(str).values
 
-    # ARI if ground_truth exists
-    if "ground_truth" in adata_run.obs.columns:
-        gt = adata_run.obs["ground_truth"].astype(str).tolist()
-        pr_i = adata_run.obs["pred"].astype(str).tolist()
-        pr_r = adata_run.obs["refined_pred"].astype(str).tolist()
-        try:
-            ari_i = ari(gt, pr_i)
-        except Exception:
-            ari_i = float("nan")
-        try:
-            ari_r = ari(gt, pr_r)
-        except Exception:
-            ari_r = float("nan")
-        ari_rows.append({"PCs": num_pcs, "k": N_CLUSTERS, "ARI_initial": ari_i, "ARI_refined": ari_r})
-        print(f"✓ ARI initial ({num_pcs} PCs, k={N_CLUSTERS}): {ari_i:.4f}")
-        print(f"✓ ARI refined ({num_pcs} PCs, k={N_CLUSTERS}): {ari_r:.4f}")
+    # ARI calculation
+    if ground_truth_col:
+        valid_mask = ~adata_run.obs[ground_truth_col].isna()
+        if valid_mask.sum() > 0:
+            gt = adata_run.obs.loc[valid_mask, ground_truth_col].astype(str).tolist()
+            pr_i = adata_run.obs.loc[valid_mask, "pred"].astype(str).tolist()
+            pr_r = adata_run.obs.loc[valid_mask, "refined_pred"].astype(str).tolist()
+            try:
+                ari_i = ari(gt, pr_i)
+            except Exception:
+                ari_i = float("nan")
+            try:
+                ari_r = ari(gt, pr_r)
+            except Exception:
+                ari_r = float("nan")
+            ari_rows.append({"PCs": num_pcs, "k": N_CLUSTERS, "ARI_initial": ari_i, "ARI_refined": ari_r})
+            print(f"✓ ARI initial ({num_pcs} PCs, k={N_CLUSTERS}): {ari_i:.4f}")
+            print(f"✓ ARI refined ({num_pcs} PCs, k={N_CLUSTERS}): {ari_r:.4f}")
 
 # =========================
 # Save results
@@ -184,7 +185,7 @@ results.to_csv(OUTPUT_CSV, index=False)
 print(f"\n✓ Saved clustering labels to {OUTPUT_CSV}")
 print("Columns:", ", ".join(results.columns))
 
-# Save ARI summary (if any)
+# Save ARI summary
 if ari_rows:
     ari_df = pd.DataFrame(ari_rows)
     with open(OUTPUT_ARI_TXT, "w") as f:
@@ -197,7 +198,60 @@ if ari_rows:
         f.write(f"Best refined ARI: {best_row['ARI_refined']:.6f}  (PCs={int(best_row['PCs'])})\n")
     print(f"✓ Saved ARI summary to {OUTPUT_ARI_TXT}")
 else:
-    print("⚠️  No 'ground_truth' column found — ARI summary not written.")
+    print("⚠️  No ground truth labels found — ARI summary not written.")
+
+# =========================
+# Create plot
+# =========================
+print("\nCreating visualization plot...")
+fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+
+# 3PCs results
+spatial_coords = adata.obsm['spatial']
+scatter1 = axes[0].scatter(spatial_coords[:, 0], spatial_coords[:, 1], 
+                          c=pd.Categorical(results["refined_pred_3PCs_k7"]).codes, 
+                          cmap='viridis', s=5)
+axes[0].set_title(f'STARmap - 3PCs (k={N_CLUSTERS})')
+axes[0].set_xlabel('X coordinate')
+axes[0].set_ylabel('Y coordinate')
+axes[0].set_aspect('equal', adjustable='box')
+
+# 10PCs results
+scatter2 = axes[1].scatter(spatial_coords[:, 0], spatial_coords[:, 1], 
+                          c=pd.Categorical(results["refined_pred_10PCs_k7"]).codes, 
+                          cmap='viridis', s=5)
+axes[1].set_title(f'STARmap - 10PCs (k={N_CLUSTERS})')
+axes[1].set_xlabel('X coordinate')
+axes[1].set_ylabel('Y coordinate')
+axes[1].set_aspect('equal', adjustable='box')
+
+# True labels
+if ground_truth_col and ground_truth_col in adata.obs.columns:
+    valid_mask = ~adata.obs[ground_truth_col].isna()
+    if valid_mask.sum() > 0:
+        temp_coords = spatial_coords[valid_mask]
+        temp_labels = adata.obs.loc[valid_mask, ground_truth_col]
+        scatter3 = axes[2].scatter(temp_coords[:, 0], temp_coords[:, 1], 
+                                  c=pd.Categorical(temp_labels).codes, 
+                                  cmap='viridis', s=5)
+        axes[2].set_title('STARmap - True Labels')
+    else:
+        axes[2].text(0.5, 0.5, 'No valid ground truth\nlabels available', 
+                   ha='center', va='center', transform=axes[2].transAxes)
+        axes[2].set_title('STARmap - True Labels (N/A)')
+else:
+    axes[2].text(0.5, 0.5, 'No ground truth\navailable', 
+               ha='center', va='center', transform=axes[2].transAxes)
+    axes[2].set_title('STARmap - True Labels (N/A)')
+axes[2].set_xlabel('X coordinate')
+axes[2].set_ylabel('Y coordinate')
+axes[2].set_aspect('equal', adjustable='box')
+
+plt.tight_layout()
+plt.savefig(OUTPUT_PLOT, dpi=300, bbox_inches='tight')
+plt.close()
+print(f"✓ Saved plot to {OUTPUT_PLOT}")
 
 print("\nDone.")
 logfile.close()
+
