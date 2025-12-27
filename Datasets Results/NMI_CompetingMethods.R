@@ -215,6 +215,10 @@ for (d_name in names(datasets_map)) {
         bs_file <- file.path(res_path, paste0("BayesSpace_", gsub("Starmap_Mouse", "STARmap", gsub("Visium_HD_Human_Colon_Cancer", "Colon", gsub("Lung_Xenium", "Lung", folder_name))), "_", pc, "PCs.rds"))
       }
       if (!file.exists(bs_file)) {
+        # Try with 's' suffix for STARmap typo (STARmaps instead of STARmap)
+        bs_file <- file.path(res_path, paste0("BayesSpace_STARmaps_", pc, "PCs.rds"))
+      }
+      if (!file.exists(bs_file)) {
         # Try generic name (for Gut/Brain/Breast/Prostate)
         bs_file <- file.path(res_path, paste0("BayesSpace_", folder_name, "_clustering_results.rds"))
       }
