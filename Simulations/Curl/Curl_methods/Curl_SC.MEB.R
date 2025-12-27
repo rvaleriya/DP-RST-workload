@@ -12,7 +12,7 @@ setwd("~/Desktop/DP-RST-workload")
 set.seed(9362)
 
 ### Load Data ###
-Curl_sim_data <- readr::read_csv("./New_Simulations/Curl/Curl_sim_data.csv")
+Curl_sim_data <- readr::read_csv("./Simulations/Curl/Curl_sim_data.csv")
 
 #-------------------------------------------------------------------------------
 
@@ -23,7 +23,7 @@ seeds <- c(141, 549, 75, 492, 676, 179, 587, 592, 601, 916,
 #-------------------------------------------------------------------------------
 
 # Extract first three PCAs
-Y_sample = Curl_sim_data[, 5:14] # 5:7 for PCs 1-3 and 5:14 for PCs 1-10
+Y_sample = Curl_sim_data[, 5:7] # 5:7 for PCs 1-3 and 5:14 for PCs 1-10
 head(Y_sample)
 
 loc = Curl_sim_data[, 1:2]
@@ -64,7 +64,7 @@ maxIter = 50 # Maximum iteration of EM algorithm
 Adj_sp  <- find_neighbors2(sce, platform = "ST")
 
 # Create a list to store results from different runs
-Curl_sim_SC.MEB_p10_reps <- list()
+Curl_sim_SC.MEB_p3_reps <- list()
 
 for (s in 1:length(seeds)){
   
@@ -75,8 +75,8 @@ for (s in 1:length(seeds)){
                       parallel = parallel, num_core = num_core, PX = PX, 
                       maxIter_ICM = maxIter_ICM, maxIter = maxIter)
   
-  Curl_sim_SC.MEB_p10_reps[[s]] <- SC.MEB_fit
+  Curl_sim_SC.MEB_p3_reps[[s]] <- SC.MEB_fit
 }
 
 # Save the results of the repetitive runs
-save(Curl_sim_SC.MEB_p10_reps, file = "./New_Simulations/Curl/Curl_results/Curl_sim_SC.MEB_p10_30reps.RData")
+save(Curl_sim_SC.MEB_p3_reps, file = "./Simulations/Curl/Curl_results/Curl_sim_SC.MEB_p3_30reps.RData")

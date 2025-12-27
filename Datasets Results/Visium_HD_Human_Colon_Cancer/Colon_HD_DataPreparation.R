@@ -96,6 +96,20 @@ kept_ids     <- spatial_data$id[keep_final]
 spatial_keep <- spatial_data[keep_final, , drop = FALSE]
 counts_keep  <- counts_filtered[, as.character(kept_ids), drop = FALSE]
 
+# 1) Hard-align meta to counts order
+spatial_keep <- spatial_keep[match(kept_ids, spatial_keep$id), , drop = FALSE]
+stopifnot(identical(as.character(kept_ids), as.character(spatial_keep$id)))
+
+# 2) Set barcodes as rownames for Seurat alignment
+rownames(spatial_keep) <- as.character(kept_ids)
+
+# 3) Ensure numeric x/y (THIS is the correct syntax)
+spatial_keep$x <- as.numeric(spatial_keep$x)
+spatial_keep$y <- as.numeric(spatial_keep$y)
+
+# 4) Final consistency checks
+stopifnot(sum(is.na(spatial_keep$x)) == 0L, sum(is.na(spatial_keep$y)) == 0L)
+stopifnot(identical(colnames(counts_keep), rownames(spatial_keep)))
 # ---- Gene-level QC -------------------------
 cat("\n=== GENE-LEVEL QC ===\n")
 cat(sprintf("Genes before filtering: %d\n", nrow(counts_keep)))

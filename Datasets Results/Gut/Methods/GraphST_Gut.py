@@ -1,0 +1,226 @@
+#!/usr/bin/env python3
+import os
+import sys
+
+# Ensure R_LIBS includes user's Rlibs (modules handle R_HOME and PATH)
+user_rlibs = "/scratch/user/varogovchenko/Rlibs"
+if 'R_LIBS' in os.environ:
+    if user_rlibs not in os.environ['R_LIBS']:
+        os.environ['R_LIBS'] = f"{user_rlibs}:{os.environ['R_LIBS']}"
+else:
+    # If R_LIBS not set by modules, set it with user's Rlibs
+    r_home = os.environ.get('R_HOME', '/sw/eb/sw/R/4.4.2-gfbf-2024a')
+    os.environ['R_LIBS'] = f"{user_rlibs}:{r_home}/lib64/R/library"
+import torch
+import scanpy as sc
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn import metrics
+from scipy.spatial import cKDTree
+import random
+
+# Set random seeds for reproducibility
+seed = 42
+random.seed(seed)
+np.random.seed(seed)
+torch.manual_seed(seed)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+
+from GraphST import GraphST
+sys.path.append('../GraphST/GraphST')
+from utils import clustering
+
+# Configuration
+dataset_name = "Gut"
+num_clusters = 5
+base_path = "../../ST_Datasets"
+dataset_path = os.path.join(base_path, dataset_name)
+output_csv = "GraphST_Gut.csv"
+output_ari = "GraphST_Gut_ARI.txt"
+output_plot = "GraphST_Gut_plot.png"
+
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+print(f"Using device: {device}")
+
+# Load data
+print(f"\nLoading {dataset_name} dataset...")
+adata = sc.read_visium(dataset_path, count_file="filtered_feature_bc_matrix.h5", load_images=True)
+adata.var_names_make_unique()
+print(f"Loaded {adata.n_obs} spots and {adata.n_vars} genes")
+
+# Subset Gut to selected spots
+gut_reduced_path = os.path.join(base_path, "Gut_reduced")
+subset_csv = os.path.join(gut_reduced_path, "gut_df_wt_muscle_rownames.csv")
+if os.path.exists(subset_csv):
+    print("Subsetting Gut to selected spots...")
+    spot_ids = pd.read_csv(subset_csv, header=None).squeeze().astype(str)
+    adata = adata[adata.obs_names.isin(spot_ids)].copy()
+    print(f"Subsetted to {adata.n_obs} spots")
+
+# Preprocessing
+sc.pp.normalize_total(adata, target_sum=1e4)
+sc.pp.log1p(adata)
+sc.pp.highly_variable_genes(adata, n_top_genes=2000)
+adata = adata[:, adata.var.highly_variable].copy()
+print(f"After HVG filtering: {adata.n_vars} genes")
+
+# Try to load ground truth from CSV
+ground_truth_col = None
+true_labels_csv = os.path.join(dataset_path, "gut_true_labels.csv")
+true_labels_csv_reduced = os.path.join(gut_reduced_path, "gut_true_labels.csv")
+
+csv_path = None
+if os.path.exists(true_labels_csv_reduced):
+    csv_path = true_labels_csv_reduced
+elif os.path.exists(true_labels_csv):
+    csv_path = true_labels_csv
+
+if csv_path:
+    print(f"Loading ground truth from CSV: {csv_path}")
+    all_true_labels_df = pd.read_csv(csv_path)
+    all_true_labels_df.rename(columns={'x': 'y', 'y': 'x'}, inplace=True)
+    
+    spatial_coords = pd.DataFrame(adata.obsm['spatial'], columns=['x', 'y'])
+    ari_true_labels_df = all_true_labels_df.dropna()
+    
+    if len(ari_true_labels_df) > 0:
+        tree = cKDTree(spatial_coords[['x', 'y']])
+        distances, indices = tree.query(ari_true_labels_df[['x', 'y']], k=1)
+        
+        adata.obs['true_labels'] = pd.NA
+        aligned_labels = ari_true_labels_df['z'].astype(str).values
+        adata.obs.iloc[indices, adata.obs.columns.get_loc('true_labels')] = aligned_labels
+        ground_truth_col = 'true_labels'
+        print(f"Aligned {len(ari_true_labels_df)} ground truth labels")
+else:
+    # Check for ground truth in obs columns
+    for col in ['ground_truth', 'true_labels', 'label', 'cluster', 'cell_type']:
+        if col in adata.obs.columns:
+            ground_truth_col = col
+            break
+
+# Prepare results dataframe
+results = pd.DataFrame({'barcode': adata.obs_names}, index=adata.obs_names)
+if 'spatial' in adata.obsm:
+    results[['x', 'y']] = adata.obsm['spatial']
+
+# Run GraphST and cluster with 3PCs
+print("\n=== Running GraphST with 3 PCs ===")
+model_3pc = GraphST.GraphST(adata, device=device)
+adata_3pc = model_3pc.train()
+clustering(adata_3pc, n_clusters=num_clusters, radius=50, method='mclust', refinement=True, n_pcs=3)
+results['mclust_3PCs'] = adata_3pc.obs['mclust'].astype(str).values
+
+# Run GraphST and cluster with 10PCs
+print("\n=== Running GraphST with 10 PCs ===")
+model_10pc = GraphST.GraphST(adata, device=device)
+adata_10pc = model_10pc.train()
+clustering(adata_10pc, n_clusters=num_clusters, radius=50, method='mclust', refinement=True, n_pcs=10)
+results['mclust_10PCs'] = adata_10pc.obs['mclust'].astype(str).values
+
+# Save results
+results.to_csv(output_csv, index=False)
+print(f"\nSaved results to {output_csv}")
+
+# Calculate ARI scores
+ari_3pc = None
+ari_10pc = None
+
+if ground_truth_col:
+    print(f"\nComputing ARI using '{ground_truth_col}' as ground truth...")
+    valid_mask = ~adata.obs[ground_truth_col].isna()
+    
+    if valid_mask.sum() > 0:
+        gt = pd.Categorical(adata.obs.loc[valid_mask, ground_truth_col].astype(str)).codes
+        
+        pr_3pc = pd.Categorical(results.loc[valid_mask, 'mclust_3PCs'].astype(str)).codes
+        ari_3pc = metrics.adjusted_rand_score(gt, pr_3pc)
+        
+        pr_10pc = pd.Categorical(results.loc[valid_mask, 'mclust_10PCs'].astype(str)).codes
+        ari_10pc = metrics.adjusted_rand_score(gt, pr_10pc)
+        
+        print(f"ARI (3PCs): {ari_3pc:.6f}")
+        print(f"ARI (10PCs): {ari_10pc:.6f}")
+        print(f"Calculated on {valid_mask.sum()}/{len(adata)} observations")
+    else:
+        print("No valid ground truth labels found")
+
+# Save ARI results
+with open(output_ari, 'w') as f:
+    f.write(f"GraphST clustering results for {dataset_name}\n")
+    f.write("="*50 + "\n")
+    f.write(f"Number of clusters: {num_clusters}\n")
+    if ground_truth_col:
+        f.write(f"Ground truth column: {ground_truth_col}\n")
+    f.write("="*50 + "\n")
+    if ari_3pc is not None:
+        f.write(f"ARI (3PCs): {ari_3pc:.6f}\n")
+    if ari_10pc is not None:
+        f.write(f"ARI (10PCs): {ari_10pc:.6f}\n")
+    if ari_3pc is None and ari_10pc is None:
+        f.write("ARI calculation skipped: No valid ground truth labels found.\n")
+
+print(f"Saved ARI results to {output_ari}")
+
+# Create plot
+fig, axs = plt.subplots(1, 3, figsize=(18, 5))
+
+if 'spatial' in adata.obsm and 'spatial' in adata.uns:
+    sc.pl.spatial(adata_3pc, color='mclust', ax=axs[0], show=False, title=f'{dataset_name} - 3PCs', size=1.5)
+    sc.pl.spatial(adata_10pc, color='mclust', ax=axs[1], show=False, title=f'{dataset_name} - 10PCs', size=1.5)
+    
+    if ground_truth_col:
+        valid_mask = ~adata.obs[ground_truth_col].isna()
+        if valid_mask.sum() > 0:
+            temp_adata = adata[valid_mask].copy()
+            sc.pl.spatial(temp_adata, color=ground_truth_col, ax=axs[2], show=False, 
+                         title=f'{dataset_name} - True Labels', size=1.5)
+        else:
+            axs[2].text(0.5, 0.5, 'No valid\nground truth', ha='center', va='center', transform=axs[2].transAxes)
+            axs[2].set_title(f'{dataset_name} - True Labels (N/A)')
+    else:
+        axs[2].text(0.5, 0.5, 'No ground truth\navailable', ha='center', va='center', transform=axs[2].transAxes)
+        axs[2].set_title(f'{dataset_name} - True Labels (N/A)')
+else:
+    axs[0].scatter(adata.obsm['spatial'][:, 0], adata.obsm['spatial'][:, 1],
+                   c=pd.Categorical(results['mclust_3PCs']).codes, cmap='tab10', s=1)
+    axs[0].set_title(f'{dataset_name} - 3PCs')
+    axs[0].set_xlabel('X')
+    axs[0].set_ylabel('Y')
+    axs[0].set_aspect('equal')
+    
+    axs[1].scatter(adata.obsm['spatial'][:, 0], adata.obsm['spatial'][:, 1],
+                   c=pd.Categorical(results['mclust_10PCs']).codes, cmap='tab10', s=1)
+    axs[1].set_title(f'{dataset_name} - 10PCs')
+    axs[1].set_xlabel('X')
+    axs[1].set_ylabel('Y')
+    axs[1].set_aspect('equal')
+    
+    if ground_truth_col:
+        valid_mask = ~adata.obs[ground_truth_col].isna()
+        if valid_mask.sum() > 0:
+            axs[2].scatter(adata.obsm['spatial'][valid_mask, 0], 
+                          adata.obsm['spatial'][valid_mask, 1],
+                          c=pd.Categorical(adata.obs.loc[valid_mask, ground_truth_col].astype(str)).codes,
+                          cmap='tab10', s=1)
+            axs[2].set_title(f'{dataset_name} - True Labels')
+        else:
+            axs[2].text(0.5, 0.5, 'No valid\nground truth', ha='center', va='center', transform=axs[2].transAxes)
+            axs[2].set_title(f'{dataset_name} - True Labels (N/A)')
+    else:
+        axs[2].text(0.5, 0.5, 'No ground truth\navailable', ha='center', va='center', transform=axs[2].transAxes)
+        axs[2].set_title(f'{dataset_name} - True Labels (N/A)')
+    axs[2].set_xlabel('X')
+    axs[2].set_ylabel('Y')
+    axs[2].set_aspect('equal')
+
+plt.tight_layout()
+plt.savefig(output_plot, dpi=300, bbox_inches='tight')
+plt.close()
+print(f"Saved plot to {output_plot}")
+
+print(f"\nFinished processing {dataset_name}")
+

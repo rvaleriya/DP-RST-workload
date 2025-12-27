@@ -172,11 +172,11 @@ ggsave("./Simulations/Curl/Curl_plots/Curl_sim_true_clusters.png",
 #-------------------------------------------------------------------------------
 ##### DP-RST results for p=3 #####
 
-load("./Simulations/Curl/Curl_results/split_DP-RST/Curl_sim_DP.RST_p3_FirstTen_reps.RData")
+load("./Simulations/Curl/Curl_results/Curl_sim_DP.RST_p3_FirstTen_reps.RData")
 Curl_sim_DP.RST_p3_FirstTen_reps <- Curl_sim_DP.RST_p3_reps
-load("./Simulations/Curl/Curl_results/split_DP-RST/Curl_sim_DP.RST_p3_SecondTen_reps.RData")
+load("./Simulations/Curl/Curl_results/Curl_sim_DP.RST_p3_SecondTen_reps.RData")
 Curl_sim_DP.RST_p3_SecondTen_reps <- Curl_sim_DP.RST_p3_reps[11:20]
-load("./Simulations/Curl/Curl_results/split_DP-RST/Curl_sim_DP.RST_p3_ThirdTen_reps.RData")
+load("./Simulations/Curl/Curl_results/Curl_sim_DP.RST_p3_ThirdTen_reps.RData")
 Curl_sim_DP.RST_p3_ThirdTen_reps <- Curl_sim_DP.RST_p3_reps[21:30]
 
 # Combine all into one list
@@ -262,11 +262,11 @@ DPM_results_p3
 #-------------------------------------------------------------------------------
 ##### DP-RST results for p=10 #####
 
-load("./Simulations/Curl/Curl_results/split_DP-RST/Curl_sim_DP.RST_p10_FirstTen_30reps.RData")
+load("./Simulations/Curl/Curl_results/Curl_sim_DP.RST_p10_FirstTen_30reps.RData")
 Curl_sim_DP.RST_p10_FirstTen_reps <- Curl_sim_DP.RST_p10_reps
-load("./Simulations/Curl/Curl_results/split_DP-RST/Curl_sim_DP.RST_p10_SecondTen_30reps.RData")
+load("./Simulations/Curl/Curl_results/Curl_sim_DP.RST_p10_SecondTen_30reps.RData")
 Curl_sim_DP.RST_p10_SecondTen_reps <- Curl_sim_DP.RST_p10_reps[11:20]
-load("./Simulations/Curl/Curl_results/split_DP-RST/Curl_sim_DP.RST_p10_ThirdTen_30reps.RData")
+load("./Simulations/Curl/Curl_results/Curl_sim_DP.RST_p10_ThirdTen_30reps.RData")
 Curl_sim_DP.RST_p10_ThirdTen_reps <- Curl_sim_DP.RST_p10_reps[21:30]
 
 # Combine all into one list
@@ -426,7 +426,7 @@ ggsave("./Simulations/Curl/Curl_plots/Curl_hist_combined_plot.png", combined_plo
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 ##### BayesSpace results #####
-load("./Simulations/Curl/Curl_results/Curl_sim_BayesSpace_p3_30reps.RData")
+load("./Simulations/Curl/Curl_results/Curl_sim_BayesSpace_p3_reps_30reps.RData")
 
 BayesSpace_acc_p3 <- c()
 for (i in 1:30){
@@ -455,7 +455,7 @@ BayesSpace_results_p3 <- plot_points_paper(
 BayesSpace_results_p3
 
 #-------------------------------------------------------------------------------
-load("./Simulations/Curl/Curl_results/Curl_sim_BayesSpace_p10_30reps.RData")
+load("./Simulations/Curl/Curl_results/Curl_sim_BayesSpace_p10_reps_30reps.RData")
 
 BayesSpace_acc_p10 <- c()
 for (i in 1:30){
@@ -740,17 +740,17 @@ ggsave("./Simulations/Curl/Curl_plots/Curl_sim_kmeans.png",
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 ##### Load GraphST data #####
-GraphST_sim_results_p3 <- readr::read_csv("./Simulations/Curl/Curl_results/graphst_curl_3p_multiseed_k10_radius50_results.csv")
+GraphST_sim_results <- readr::read_csv("./Simulations/Curl/Curl_results/graphst_curl_sim.csv")
 
 # Extract ARIs from all GraphST columns
-graphst_partition_matrix_p3 <- GraphST_sim_results_p3 %>%
-  select(starts_with("refined_mclust_seed_")) %>%
+graphst_partition_matrix_p3 <- GraphST_sim_results %>%
+  select(starts_with("refined_mclust_3PCs_seed_")) %>%
   as.matrix()
 
 graphst_ari_p3 <- apply(
   graphst_partition_matrix_p3, 
   2, 
-  function(col) adjustedRandIndex(GraphST_sim_results_p3$original_cluster, col)
+  function(col) adjustedRandIndex(GraphST_sim_results$original_cluster, col)
 )
 
 graphst_best_index_p3 <- which.max(graphst_ari_p3)
@@ -776,17 +776,15 @@ graphst_results_p3 <- plot_points_paper(
 graphst_results_p3
 #-------------------------------------------------------------------------------
 
-GraphST_sim_results_p10 <- readr::read_csv("./Simulations/Curl/Curl_results/graphst_curl_10p_multiseed_k10_radius50_results.csv")
-
 # Extract ARIs from all GraphST columns
-graphst_partition_matrix_p10 <- GraphST_sim_results_p10 %>%
-  select(starts_with("refined_mclust_seed_")) %>%
+graphst_partition_matrix_p10 <- GraphST_sim_results %>%
+  select(starts_with("refined_mclust_10PCs_seed_")) %>%
   as.matrix()
 
 graphst_ari_p10 <- apply(
   graphst_partition_matrix_p10, 
   2, 
-  function(col) adjustedRandIndex(GraphST_sim_results_p10$original_cluster, col)
+  function(col) adjustedRandIndex(GraphST_sim_results$original_cluster, col)
 )
 
 graphst_best_index_p10 <- which.max(graphst_ari_p10)
@@ -834,7 +832,7 @@ ggsave("./Simulations/Curl/Curl_plots/Curl_sim_GraphST.png",
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 ##### Load SEDR data #####
-SEDR_sim_results_p3 <- readr::read_csv("./Simulations/Curl/Curl_results/sedr_curl_3p_multiseed_k10_results_BestResult.csv")
+SEDR_sim_results_p3 <- readr::read_csv("./Simulations/Curl/Curl_results/sedr_curl_3p_multiseed_k10_results.csv")
 
 # Extract ARIs from all SEDR columns
 sedr_partition_matrix_p3 <- SEDR_sim_results_p3 %>%
@@ -870,7 +868,7 @@ sedr_results_p3 <- plot_points_paper(
 sedr_results_p3
 #-------------------------------------------------------------------------------
 
-SEDR_sim_results_p10 <- readr::read_csv("./Simulations/Curl/Curl_results/sedr_curl_10p_multiseed_k10_results_BestResult.csv")
+SEDR_sim_results_p10 <- readr::read_csv("./Simulations/Curl/Curl_results/sedr_curl_10p_multiseed_k10_results.csv")
 
 # Extract ARIs from all SEDR columns
 sedr_partition_matrix_p10 <- SEDR_sim_results_p10 %>%
@@ -928,17 +926,17 @@ ggsave("./Simulations/Curl/Curl_plots/Curl_sim_SEDR.png",
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 ##### Load STAGATE data #####
-STAGATE_sim_results_p3 <- readr::read_csv("./Simulations/Curl/Curl_results/stagate_simdata_multiseed_10clusters_3p_results.csv")
+STAGATE_sim_results <- readr::read_csv("./Simulations/Curl/Curl_results/curl_sim_stagate.csv")
 
 # Extract ARIs from all STAGATE columns
-stagate_partition_matrix_p3 <- STAGATE_sim_results_p3 %>%
-  select(starts_with("stagate_seed_")) %>%
+stagate_partition_matrix_p3 <- STAGATE_sim_results %>%
+  select(starts_with("stagate_3pc_seed_")) %>%
   as.matrix()
 
 stagate_ari_p3 <- apply(
   stagate_partition_matrix_p3, 
   2, 
-  function(col) adjustedRandIndex(STAGATE_sim_results_p3$cluster, col)
+  function(col) adjustedRandIndex(STAGATE_sim_results$cluster, col)
 )
 
 stagate_best_index_p3 <- which.max(stagate_ari_p3)
@@ -964,17 +962,15 @@ stagate_results_p3 <- plot_points_paper(
 stagate_results_p3
 #-------------------------------------------------------------------------------
 
-STAGATE_sim_results_p10 <- readr::read_csv("./Simulations/Curl/Curl_results/stagate_simdata_multiseed_10clusters_10p_results.csv")
-
 # Extract ARIs from all STAGATE columns
-stagate_partition_matrix_p10 <- STAGATE_sim_results_p10 %>%
-  select(starts_with("stagate_seed_")) %>%
+stagate_partition_matrix_p10 <- STAGATE_sim_results %>%
+  select(starts_with("stagate_10pc_seed_")) %>%
   as.matrix()
 
 stagate_ari_p10 <- apply(
   stagate_partition_matrix_p10, 
   2, 
-  function(col) adjustedRandIndex(STAGATE_sim_results_p10$cluster, col)
+  function(col) adjustedRandIndex(STAGATE_sim_results$cluster, col)
 )
 
 stagate_best_index_p10 <- which.max(stagate_ari_p10)
@@ -1023,17 +1019,17 @@ ggsave("./Simulations/Curl/Curl_plots/Curl_sim_STAGATE.png",
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 ##### Load SpaGCN data #####
-SpaGCN_sim_results_p3 <- readr::read_csv("./Simulations/Curl/Curl_results/curl_spagcn_clustering_results_3p_multi_seed.csv")
+SpaGCN_sim_results <- readr::read_csv("./Simulations/Curl/Curl_results/curl_spagcn_clustering_results_3p_10p_multi_seed.csv")
 
 # Extract ARIs from all SpaGCN columns
-spagcn_partition_matrix_p3 <- SpaGCN_sim_results_p3 %>%
-  select(starts_with("refined_pred_seed_")) %>%
+spagcn_partition_matrix_p3 <- SpaGCN_sim_results %>%
+  select(starts_with("refined_pred_3PCs_k10_seed_")) %>%
   as.matrix()
 
 spagcn_ari_p3 <- apply(
   spagcn_partition_matrix_p3, 
   2, 
-  function(col) adjustedRandIndex(SpaGCN_sim_results_p3$ground_truth_cluster, col)
+  function(col) adjustedRandIndex(SpaGCN_sim_results$ground_truth_cluster, col)
 )
 
 spagcn_best_index_p3 <- which.max(spagcn_ari_p3)
@@ -1059,17 +1055,16 @@ spagcn_results_p3 <- plot_points_paper(
 spagcn_results_p3
 
 #-------------------------------------------------------------------------------
-SpaGCN_sim_results_p10 <- readr::read_csv("./Simulations/Curl/Curl_results/curl_spagcn_clustering_results_10p_multi_seed.csv")
 
 # Extract ARIs from all SpaGCN columns
-spagcn_partition_matrix_p10 <- SpaGCN_sim_results_p10 %>%
-  select(starts_with("refined_pred_seed_")) %>%
+spagcn_partition_matrix_p10 <- SpaGCN_sim_results %>%
+  select(starts_with("refined_pred_10PCs_k10_seed_")) %>%
   as.matrix()
 
 spagcn_ari_p10 <- apply(
   spagcn_partition_matrix_p10, 
   2, 
-  function(col) adjustedRandIndex(SpaGCN_sim_results_p10$ground_truth_cluster, col)
+  function(col) adjustedRandIndex(SpaGCN_sim_results$ground_truth_cluster, col)
 )
 
 spagcn_best_index_p10 <- which.max(spagcn_ari_p10)
@@ -1173,7 +1168,7 @@ boxplot_with_label <- ggdraw() +
   draw_label("(B)", x = 0.1, y = 0.98, size = 20, hjust = 0, vjust = 1)
 boxplot_with_label
 
-ggsave("./Simulations/Curl/Curl_plots/Curl_sim_boxplot_BestSEDR.png", 
+ggsave("./Simulations/Curl/Curl_plots/Curl_sim_boxplot.png", 
        plot = boxplot_with_label, 
        width = 12, height = 8, units = "in", dpi = 300, bg = "transparent")
 

@@ -20,7 +20,7 @@ setwd("~/Desktop/DP-RST-workload")
 ##### LOAD BOUNDARY #####
 
 # Unzip the folder
-zip_file <- "./New_Simulations/Curl/Curl_contours_csv.zip"
+zip_file <- "./Simulations/Curl/Curl_contours_csv.zip"
 unzip(zip_file, exdir = "contours_csv")
 
 # List all CSV files
@@ -242,33 +242,34 @@ super_cluster_means[, 4:10] <- matrix(
 )
 super_cluster_means
 
-# PC1        PC2        PC3        PC4         PC5        PC6         PC7        PC8        PC9
-# 6  -0.7698498  0.7339669  1.4172902  1.0630608 -1.37262949 -0.9700237  1.61617021  1.9688800 -1.7792498
-# 1   0.4300798 -0.3751151  0.8032535 -0.3507444 -1.48928676 -1.2953885  0.12266052  1.1587830  0.3490400
-# 4   0.8965421  0.3796656  0.9347539 -0.1598109 -1.35539892 -0.6524736 -1.18814608  0.7605677  1.2698682
-# 10 -1.7034581  0.9154624 -0.4650254  1.4614022  0.07279496  1.6133609  0.97789465  0.2834523 -0.4923427
-# 7  -0.4299491 -1.4792278  0.6308453  1.0965298 -0.91818409 -0.2302815 -1.79511540  1.5551455  1.6311524
-# 9   1.5403906 -1.5720835 -1.9588612 -1.9507267  1.77879653  1.8536578  1.31977587 -1.9948562 -0.6097503
-# 2   0.3351252  0.1871210 -1.2773419  0.5957764  1.23965784  0.7682142 -1.05001589 -1.2109613 -1.2525723
-# 8  -1.0286639  1.3966886 -0.8446397 -0.9611224 -1.71125193  0.7126572  0.93480136 -1.8687307  0.4613301
-# 3  -0.5608884 -0.7287986 -0.3123451 -1.4591738 -1.42189129 -1.2406806  0.07728526  0.5546248  1.9259320
-# 5  -0.7490319 -1.0619057  0.0598671  1.5352423 -0.20286000 -0.7047200 -0.60601640 -0.7753554  1.6195238
-# PC10
-# 6   1.5874526
-# 1   0.1486751
-# 4  -1.7431250
-# 10 -1.9840330
-# 7  -0.8042885
-# 9   1.8768865
-# 2  -0.2561249
-# 8  -1.5397152
-# 3   0.8488437
-# 5   0.9130028
+# [,1]       [,2]       [,3]        [,4]       [,5]       [,6]        [,7]
+# [1,] -0.7698498  0.4300798  0.8965421 -0.85172903 -0.2149746  0.7701953  0.16756262
+# [2,]  0.7339669 -0.3751151  0.3796656  0.45773122 -0.7396139 -0.7860417  0.09356049
+# [3,]  1.4172902  0.8032535  0.9347539 -0.23251272  0.3154226 -0.9794306 -0.63867094
+# [4,]  1.0630608 -0.3507444 -0.1598109  0.73070112  0.5482649 -0.9753633  0.29788819
+# [5,] -1.3726295 -1.4892868 -1.3553989  0.03639748 -0.4590920  0.8893983  0.61982892
+# [6,] -0.9700237 -1.2953885 -0.6524736  0.80668044 -0.1151408  0.9268289  0.38410711
+# [7,]  1.6161702  0.1226605 -1.1881461  0.48894733 -0.8975577  0.6598879 -0.52500794
+# [8,]  1.9688800  1.1587830  0.7605677  0.14172617  0.7775727 -0.9974281 -0.60548065
+# [9,] -1.7792498  0.3490400  1.2698682 -0.24617135  0.8155762 -0.3048752 -0.62628613
+# [10,]  1.5874526  0.1486751 -1.7431250 -0.99201650 -0.4021442  0.9384432 -0.12806246
+# [,8]        [,9]       [,10]
+# [1,] -0.5143319 -0.28044422 -0.37451595
+# [2,]  0.6983443 -0.36439928 -0.53095284
+# [3,] -0.4223198 -0.15617254  0.02993355
+# [4,] -0.4805612 -0.72958688  0.76762113
+# [5,] -0.8556260 -0.71094565 -0.10143000
+# [6,]  0.3563286 -0.62034031 -0.35236001
+# [7,]  0.4674007  0.03864263 -0.30300820
+# [8,] -0.9343654  0.27731239 -0.38767768
+# [9,]  0.2306650  0.96296599  0.80976190
+# [10,] -0.7698576  0.42442185  0.45650140
 
 # Define skewness parameter
 skew_param <- runif(num_dimensions, min = -10, max = 10)  # positive skew
 skew_param
-# 3.345068 -8.478725  3.539594 -4.109787 -8.314736 -3.754280 -8.654152  7.299265  7.435321  9.930456
+# [1]  3.345068 -8.478725  3.539594 -4.109787 -8.314736 -3.754280 -8.654152  7.299265
+# [9]  7.435321  9.930456
 
 # Define random omega (scale parameter) per dimension
 # omega_param <- runif(num_dimensions, min = 0.5, max = 3)
@@ -276,11 +277,12 @@ skew_param
 # # 2.4562269 0.9067784 2.1733090 1.9859214 1.6307192 1.2258828 2.3512291 0.6990043 0.6104302 2.4902774
 
 omega_param <- c(
-  runif(3, min = 0.5, max = 3),     # Less noise for PC1–PC3
-  runif(7, min = 1, max = 3)      # More noise for PC4–PC10
+  runif(3, min = 1, max = 3),     # Less noise for PC1–PC3
+  runif(7, min = 2, max = 5)      # More noise for PC4–PC10
 )
 omega_param
-# 0.8912454 0.5813557 0.8346618 2.1887371 1.9045753 1.5807062 2.4809833 1.1592034 1.0883441 2.5922219
+# [1] 2.564981 1.325423 2.338647 3.783106 3.356863 2.871059 4.221475 2.238805 2.132516
+# [10] 4.388333
 
 # Simulate data
 simulated_data <- coords_geo_cluster %>%
@@ -294,6 +296,20 @@ simulated_data <- coords_geo_cluster %>%
 
 # Clean column names
 colnames(simulated_data) <- gsub("simulated_features_", "", colnames(simulated_data))
+
+head(simulated_data)
+
+# ---------------------------------------------------------
+# Overwrite PC9 and PC10 with Noise
+# ---------------------------------------------------------
+# Calculate number of points
+n_points <- nrow(simulated_data)
+
+# PC9: Normal distribution, Mean = 0, Variance = 1 (sd = 1)
+simulated_data$PC9 <- rnorm(n_points, mean = 0, sd = 1)
+
+# PC10: Normal distribution, Mean = 1, Variance = 2 (sd = sqrt(2))
+simulated_data$PC10 <- rnorm(n_points, mean = 1, sd = sqrt(2))
 
 head(simulated_data)
 
@@ -352,7 +368,7 @@ density_plots <- ggplot(df_melted, aes(x = Value, fill = Variable)) +
 density_plots
 
 # Save the combined plot
-ggsave("./New_Simulations/Curl/Curl_DensityFeatures.pdf", 
+ggsave("./Simulations/Curl/Curl_DensityFeatures.pdf", 
        plot = density_plots, 
        width = 15, height = 10)
 
@@ -398,7 +414,7 @@ combined_plot <- grid.arrange(grobs = plot_list, ncol = 5)
 combined_plot
 
 # Save the combined plot
-ggsave("./New_Simulations/Curl/Curl_SpatialFeatures.pdf", 
+ggsave("./Simulations/Curl/Curl_SpatialFeatures.pdf", 
        plot = combined_plot, 
        width = 20, height = 5)
 
@@ -406,5 +422,5 @@ ggsave("./New_Simulations/Curl/Curl_SpatialFeatures.pdf",
 #-------------------------------------------------------------------------------
 ##### SAVE THE DATA #####
 
-write.csv(simulated_data, "./New_Simulations/Curl/Curl_sim_data.csv", row.names = FALSE)
+write.csv(simulated_data, "./Simulations/Curl/Curl_sim_data.csv", row.names = FALSE)
 

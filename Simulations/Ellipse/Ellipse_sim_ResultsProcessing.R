@@ -391,17 +391,15 @@ ggsave("./Simulations/Ellipse/Ellipse_plots/Ellipse_sim_DPM.png",
 
 
 #-------------------------------------------------------------------------------
-
+df_hist_p3 <- data.frame(clust_number = clust_number_p3)
 ### Make a histogram with the number of teams chosen over runs (for the Figure 1 in Supplementary Materials)
-clust_number_p3 <- data.frame(clust_number = clust_number_p3)
-clust_number_p3$clust_number <- factor(clust_number_p3$clust_number, levels = 1:5)
+df_hist_p3$clust_number <- factor(df_hist_p3$clust_number, levels = 1:5)
 
-Ellipse_hist_plot_p3 <- ggplot(clust_number_p3, aes(x = clust_number)) +
+Ellipse_hist_plot_p3 <- ggplot(df_hist_p3, aes(x = clust_number)) +
   geom_bar(fill = "#FFADAD", color = "black") +
   theme_minimal() +
   labs(
-    title = "Cluster Number Estimation in Ellipse Simulation
-    p = 3",
+    title = "Cluster Number Estimation in Ellipse Simulation\n    p = 3",
     x = "Estimated number of clusters",
     y = "Frequency"
   ) +
@@ -410,18 +408,18 @@ Ellipse_hist_plot_p3 <- ggplot(clust_number_p3, aes(x = clust_number)) +
     axis.title = element_text(face = "bold")
   )
 
-Ellipse_hist_plot_p3
+print(Ellipse_hist_plot_p3)
 
 
-clust_number_p10 <- data.frame(clust_number = clust_number_p10)
-clust_number_p10$clust_number <- factor(clust_number_p10$clust_number, levels = 1:7)
+df_hist_p10 <- data.frame(clust_number = clust_number_p10)
 
-Ellipse_hist_plot_p10 <- ggplot(clust_number_p10, aes(x = clust_number)) +
+df_hist_p10$clust_number <- factor(df_hist_p10$clust_number, levels = 1:7)
+
+Ellipse_hist_plot_p10 <- ggplot(df_hist_p10, aes(x = clust_number)) +
   geom_bar(fill = "#B28DFF", color = "black") +
   theme_minimal() +
   labs(
-    title = "Cluster Number Estimation in Ellipse Simulation
-    p = 10",
+    title = "Cluster Number Estimation in Ellipse Simulation\n    p = 10",
     x = "Estimated number of clusters",
     y = "Frequency"
   ) +
@@ -430,13 +428,13 @@ Ellipse_hist_plot_p10 <- ggplot(clust_number_p10, aes(x = clust_number)) +
     axis.title = element_text(face = "bold")
   )
 
-Ellipse_hist_plot_p10
+print(Ellipse_hist_plot_p10)
 
 combined_plot_hist <- Ellipse_hist_plot_p3 + Ellipse_hist_plot_p10
-combined_plot_hist
+print(combined_plot_hist)
 
-ggsave("./Simulations/Ellipse/Ellipse_plots/Ellipse_hist_combined_plot.png", combined_plot_hist, width = 10, height = 4)
-
+ggsave("./Simulations/Ellipse/Ellipse_plots/Ellipse_hist_combined_plot.png", 
+       combined_plot_hist, width = 10, height = 4)
 #-------------------------------------------------------------------------------
 ##### DENSITY PLOTS OF EACH PC PER CLUSTER #####
 

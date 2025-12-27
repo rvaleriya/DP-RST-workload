@@ -19,7 +19,7 @@ import anndata # Import anndata explicitly
 # --- Configuration ---
 data_file = "/scratch/user/varogovchenko/BASTION_HPRC/Simulations/Curl/Curl_sim_data.csv"
 output_dir_csv = "res_curl_3p_csv"
-log_file_path = "SEDR_Curl_3p_MultiSeed_output.log" # Updated log file name
+log_file_path = "SEDR_Curl_3p_MultiSeed_output_BestResult.log" # Updated log file name
 
 # List of seeds to run
 seeds_to_run = [
@@ -183,7 +183,7 @@ for seed in seeds_to_run:
         print(f"Warning: Clustering results for seed {seed} not found. Filling with NA.")
 
 
-csv_filename = os.path.join(output_dir_csv, f"sedr_curl_3p_multiseed_k{num_clusters}_results.csv")
+csv_filename = os.path.join(output_dir_csv, f"sedr_curl_3p_multiseed_k{num_clusters}_results_BestResult.csv")
 final_df.to_csv(csv_filename, index=False)
 print(f"✓ Saved consolidated results to {csv_filename}")
 
@@ -207,4 +207,154 @@ sys.stderr = sys.__stderr__
 
 logfile.close()
 
-print(f"Output logged to {log_file_path}") 
+print(f"Output logged to {log_file_path}")
+
+# ============================================================================
+# 10 PC VERSION
+# ============================================================================
+
+# --- Configuration for 10 PCs ---
+output_dir_csv_10p = "res_curl_10p_csv"
+log_file_path_10p = "SEDR_Curl_10p_MultiSeed_output_BestResult.log"
+
+# --- Setup for 10 PCs ---
+logfile_10p = open(log_file_path_10p, "w")
+sys.stdout = logfile_10p
+sys.stderr = logfile_10p
+
+print(f"Using device: {device}")
+print(f"Using R_HOME: {os.environ.get('R_HOME')}")
+print(f"Using R_LIBS_USER: {os.environ.get('R_LIBS_USER')}")
+
+os.makedirs(output_dir_csv_10p, exist_ok=True)
+
+# --- Create AnnData Object for 10 PCs ---
+print("Creating AnnData object with 10 PCs...")
+features_10p = df[['PC1', 'PC2', 'PC3', 'PC4', 'PC5', 'PC6', 'PC7', 'PC8', 'PC9', 'PC10']].values
+spatial_coords_10p = df[['X', 'Y']].values
+observations_10p = df[['super_cluster']].copy()
+
+adata_10p = anndata.AnnData(X=features_10p.copy())
+adata_10p.obsm['spatial'] = spatial_coords_10p.copy()
+adata_10p.obs = observations_10p.copy()
+adata_10p.obs.index = df.index.astype(str)
+adata_10p.var_names = [f'Y{i}' for i in range(1, 11)]  # Y1, Y2, ..., Y10
+adata_10p.var_names_make_unique()
+
+print("AnnData object created:")
+print(adata_10p)
+
+# --- Preprocessing (Skipped) ---
+print("Preprocessing data... SKIPPING")
+
+# --- Loop Over Seeds for 10 PCs ---
+all_aris_10p = {}  # Dictionary to store ARI for each seed
+
+for seed in seeds_to_run:
+    print(f"--- Processing with Random Seed: {seed} (10 PCs) ---")
+    SEDR.fix_seed(seed)
+
+    # --- Construct Graph ---
+    print(f"Constructing neighborhood graph with k={graph_neighbors}...")
+    try:
+        graph_dict_10p = SEDR.graph_construction(adata_10p, graph_neighbors)
+        print("Graph construction complete.")
+    except Exception as e:
+        print(f"Error during graph construction for seed {seed}: {e}")
+        continue
+
+    # --- Train SEDR ---
+    sedr_input_features_10p = adata_10p.X
+    print(f"Training SEDR using {sedr_input_features_10p.shape[1]} features for seed {seed}...")
+    try:
+        sedr_net_10p = SEDR.Sedr(sedr_input_features_10p, graph_dict_10p, mode='clustering', device=device)
+        using_dec = True
+        if using_dec:
+            print(f"Training with DEC for {sedr_train_epochs} N...")
+            sedr_net_10p.train_with_dec(N=sedr_train_epochs)
+        else:
+            print(f"Training without DEC for {sedr_train_epochs} N...")
+            sedr_net_10p.train_without_dec(N=sedr_train_epochs)
+        
+        sedr_feat_10p, _, _, _ = sedr_net_10p.process()
+        print(f"✓ SEDR training and processing complete for seed {seed}.")
+    except Exception as e:
+        print(f"Error during SEDR training for seed {seed}: {e}")
+        continue
+
+    # --- Clustering ---
+    print(f"Performing mclust clustering with k={num_clusters} using SEDR embedding for seed {seed}...")
+    cluster_key_seed_10p = f'mclust_seed_{seed}'
+    try:
+        temp_sedr_key_10p = 'SEDR_temp'
+        adata_10p.obsm[temp_sedr_key_10p] = sedr_feat_10p
+        
+        SEDR.mclust_R(adata_10p, num_clusters, use_rep=temp_sedr_key_10p, key_added=cluster_key_seed_10p)
+        
+        del adata_10p.obsm[temp_sedr_key_10p]
+        
+        print(f"✓ Clustering complete. Results stored in adata_10p.obs['{cluster_key_seed_10p}']")
+    except Exception as e:
+        print(f"Error during mclust clustering for seed {seed}: {e}")
+        if temp_sedr_key_10p in adata_10p.obsm:
+            del adata_10p.obsm[temp_sedr_key_10p]
+        print("Clustering failed. Check R setup and mclust installation.")
+        continue
+
+    # Calculate ARI
+    if 'super_cluster' in adata_10p.obs.columns:
+        try:
+            true_labels_10p = adata_10p.obs['super_cluster']
+            pred_labels_10p = adata_10p.obs[cluster_key_seed_10p]
+            ari_10p = metrics.adjusted_rand_score(true_labels_10p, pred_labels_10p)
+            all_aris_10p[seed] = ari_10p
+            print(f"Adjusted Rand Index (ARI) vs 'super_cluster' for seed {seed}: {ari_10p:.4f}")
+        except Exception as e:
+            print(f"Error calculating ARI for seed {seed}: {e}")
+            all_aris_10p[seed] = np.nan
+    else:
+        if seed == seeds_to_run[0]:
+            print("Ground truth 'super_cluster' column not found in adata_10p.obs. Skipping ARI calculation.")
+
+# --- Combine and Save Results for 10 PCs ---
+print("Consolidating results for 10 PCs...")
+
+final_df_10p = pd.DataFrame({
+    'barcode': adata_10p.obs.index,
+    'x': adata_10p.obsm['spatial'][:, 0],
+    'y': adata_10p.obsm['spatial'][:, 1],
+    'original_cluster': adata_10p.obs.get('super_cluster', pd.NA),
+})
+
+for seed in seeds_to_run:
+    cluster_key_seed_10p = f'mclust_seed_{seed}'
+    if cluster_key_seed_10p in adata_10p.obs.columns:
+        final_df_10p[cluster_key_seed_10p] = adata_10p.obs[cluster_key_seed_10p]
+    else:
+        final_df_10p[cluster_key_seed_10p] = pd.NA
+        print(f"Warning: Clustering results for seed {seed} not found. Filling with NA.")
+
+csv_filename_10p = os.path.join(output_dir_csv_10p, f"sedr_curl_10p_multiseed_k{num_clusters}_results_BestResult.csv")
+final_df_10p.to_csv(csv_filename_10p, index=False)
+print(f"✓ Saved consolidated results to {csv_filename_10p}")
+
+# Print summary of ARIs for 10 PCs
+if all_aris_10p:
+    print("--- ARI Summary (10 PCs) ---")
+    for seed, ari in all_aris_10p.items():
+        print(f"Seed {seed}: {ari:.4f}")
+    ari_series_10p = pd.Series(all_aris_10p)
+    print(f"Mean ARI: {ari_series_10p.mean():.4f}")
+    print(f"Std Dev ARI: {ari_series_10p.std():.4f}")
+    print(f"Median ARI: {ari_series_10p.median():.4f}")
+    print(f"Min ARI: {ari_series_10p.min():.4f} (Seed: {ari_series_10p.idxmin()})")
+    print(f"Max ARI: {ari_series_10p.max():.4f} (Seed: {ari_series_10p.idxmax()})")
+
+# --- Finalize 10 PC version ---
+print("=== Multi-seed Script finished (10 PCs) ===")
+sys.stdout = sys.__stdout__
+sys.stderr = sys.__stderr__
+
+logfile_10p.close()
+
+print(f"Output logged to {log_file_path_10p}") 

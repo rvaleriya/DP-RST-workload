@@ -14,7 +14,7 @@ setwd("~/Desktop/DP-RST-workload")
 set.seed(9362)
 
 ### Load Data ###
-Curl_sim_data <- readr::read_csv("./New_Simulations/Curl/Curl_sim_data.csv")
+Curl_sim_data <- readr::read_csv("./Simulations/Curl/Curl_sim_data.csv")
 
 #-------------------------------------------------------------------------------
 
@@ -94,7 +94,7 @@ for (s in 1:length(seeds)){
 }
 
 # Save the results of the repetitive runs
-save(Curl_sim_DR.SC_p3_reps, file = "./New_Simulations/Curl/Curl_results/Curl_sim_DR.SC_p3_30reps.RData")
+save(Curl_sim_DR.SC_p3_reps, file = "./Simulations/Curl/Curl_results/Curl_sim_DR.SC_p3_30reps.RData")
 
 
 #-------------------------------------------------------------------------------
@@ -169,5 +169,5 @@ for (s in 1:length(seeds)){
 }
 
 # Save the results of the repetitive runs
-save(Curl_sim_DR.SC_p10_reps, file = "./New_Simulations/Curl/Curl_results/Curl_sim_DR.SC_p10_30reps.RData")
+save(Curl_sim_DR.SC_p10_reps, file = "./Simulations/Curl/Curl_results/Curl_sim_DR.SC_p10_30reps.RData")
 

@@ -48,7 +48,7 @@ plot_points <- function(coords, labels, bnd_df, title) {
 
 process_one <- function(pc) {
   cat("\n=== Processing", pc, "PCs ===\n")
-  rdata_path <- file.path(results_dir, sprintf("Full_Result_DP.RST_%dPCs.RData", pc))
+  rdata_path <- file.path(results_dir, sprintf("DP-RST-files/Full_Result_DP.RST_%dPCs.RData", pc))
   output <- .safe_load_result(rdata_path)
   
   n <- nrow(coords_scaled)
