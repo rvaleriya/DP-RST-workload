@@ -2,14 +2,11 @@
 *.zip filter=lfs diff=lfs merge=lfs -text
 Datasets[[:space:]]Results/Visium_HD_Human_Colon_Cancer/Nuclei_Data/*.rds filter=lfs diff=lfs merge=lfs -text
 Datasets[[:space:]]Results/Visium_HD_Human_Colon_Cancer/Nuclei_Data/*.h5ad filter=lfs diff=lfs merge=lfs -text
-Datasets[[:space:]]Results/Visium_HD_Human_Colon_Cancer/Manual_Annotations/*.csv filter=lfs diff=lfs merge=lfs -text
 *.rds filter=lfs diff=lfs merge=lfs -text
 *.tar.gz filter=lfs diff=lfs merge=lfs -text
 *.tif filter=lfs diff=lfs merge=lfs -text
 *.tif.gz filter=lfs diff=lfs merge=lfs -text
 *.h5 filter=lfs diff=lfs merge=lfs -text
 *.h5ad filter=lfs diff=lfs merge=lfs -text
-*.csv.gz filter=lfs diff=lfs merge=lfs -text
 *.gz filter=lfs diff=lfs merge=lfs -text
 Datasets[[:space:]]Results/Lung_Xenium/Data_VUILD96MF/cells_partitioned_by_annotation.csv filter=lfs diff=lfs merge=lfs -text
-*.csv filter=lfs diff=lfs merge=lfs -text
