@@ -13,3 +13,6 @@ Datasets Results/.claude/
 
 # Large raw archives (keep off repo)
 Datasets Results/Merfish_Mouse_Brain.zip
+
+# Ignore large Xenium archive (cannot push to GitHub LFS on current plan)
+/Datasets Results/Lung_Xenium/GSM7990558_output-XETG00048__0003817__VUILD96MA__20230308__003730.tar.gz

@@ -10,3 +10,4 @@ Datasets[[:space:]]Results/Visium_HD_Human_Colon_Cancer/Nuclei_Data/*.h5ad filte
 *.h5ad filter=lfs diff=lfs merge=lfs -text
 *.gz filter=lfs diff=lfs merge=lfs -text
 Datasets[[:space:]]Results/Lung_Xenium/Data_VUILD96MF/cells_partitioned_by_annotation.csv filter=lfs diff=lfs merge=lfs -text
+Datasets[[:space:]]Results/Lung_Xenium/*.tar.gz filter=lfs diff=lfs merge=lfs -text
